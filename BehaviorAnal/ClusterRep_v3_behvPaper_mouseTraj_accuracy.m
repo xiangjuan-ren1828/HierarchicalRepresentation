@@ -75,22 +75,19 @@ clsDef  = [1, 2, 3, 4, 5; ...  %% the 1st cluster
 transMat = LynnNetwork();
 miniDmat = modelRDM_minimalDist();
 
-%% =================== Model fitting procedure ===================
-%% Experiment 1:
+%% 3 Experiments:
 % I didn't regress out the confounding variables from RTs.
 circle_list = 0 : 1/60 : 1.5;
 states      = 15;
 nFit        = 100;
 expList     = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'}; % {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp', 'ImplicitClusterExp', 'ImplicitRandClusterExp'};
-folder      = '/Users/renxiangjuan/Nextcloud/MATLAB/MyExperiment/HierarchicalCluster'; %'/Volumes/HierarchicalCluster';
-%folder      = '/Users/cdlab/Nextcloud/MATLAB/MyExperiment/HierarchicalCluster'; %pwd;
-%folder          ='/home/ubuntu/Xiangjuan/MyExperiment/HierarchicalCluster';
+folder      = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 
 subLen = 24;
 %%% merge all trials
-angAcc_exp     = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
-lenData_exp    = zeros(subLen, length(circle_list), length(expList)); %% data length in each time point
-angAcc_dtr_exp = zeros(subLen, length(circle_list), 3, length(expList));
+angAcc_exp          = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
+lenData_exp         = zeros(subLen, length(circle_list), length(expList)); %% data length in each time point
+angAcc_dtr_exp      = zeros(subLen, length(circle_list), 3, length(expList));
 %%% only for the Random trials
 angAcc_Rand_exp     = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
 lenData_Rand_exp    = zeros(subLen, length(circle_list), length(expList)); %% data length in each time point
@@ -100,57 +97,42 @@ angAcc_Hami_exp     = zeros(subLen, length(circle_list), length(expList)); %% ac
 lenData_Hami_exp    = zeros(subLen, length(circle_list), length(expList)); %% data length in each time point
 angAcc_dtr_Hami_exp = zeros(subLen, length(circle_list), 3, length(expList));
 %%% accuracy for the within and between transitions for Random and Hamiltonian Walk separately
-acc_trans_walk = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+acc_trans_walk      = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
 %%% trial proportions of within-cluster and between-cluster transition under Random and Hamiltonian Walk
-trlPro_trans_walk = zeros(subLen, 2, 2, length(expList)); 
+trlPro_trans_walk   = zeros(subLen, 2, 2, length(expList)); 
 for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
     %% Subject
     if isequal(ExpWord, 'ImplicitExp')
         bhvDataDir = [folder, '/FormalExp-LynnNetwork-Results/'];
         subj_list  = {'wsn_1_f_18', 'dy_2_f_22', 'haq_3_f_24', 'hry_4_f_20', 'zjx_5_m_20', 'yyq_6_f_18', 'zkw_7_m_18', 'zy_8_f_20', 'hys_9_m_20', 'cjj_10_m_18', ...
-            'dwq_11_f_22', 'ljl_12_m_20', 'jyx_13_m_19', 'zk_14_f_21', 'lsy_15_m_19', 'cjl_16_m_19', 'yjy_17_f_23', 'lym_18_f_19', 'pr_19_f_23', 'ws_20_f_21', ...
-            'wn_21_f_21', 'hjy_22_f_18', 'qyk_23_f_22', 'yd_24_f_20'};
+                      'dwq_11_f_22', 'ljl_12_m_20', 'jyx_13_m_19', 'zk_14_f_21', 'lsy_15_m_19', 'cjl_16_m_19', 'yjy_17_f_23', 'lym_18_f_19', 'pr_19_f_23', 'ws_20_f_21', ...
+                      'wn_21_f_21', 'hjy_22_f_18', 'qyk_23_f_22', 'yd_24_f_20'};
         subjLab    = {'wsn1', 'dy2', 'haq3', 'hry4', 'zjx5', 'yyq6', 'zkw7', 'zy8', 'hys9', 'cjj10', ...
-            'dwq11', 'ljl12', 'jyx13', 'zk14', 'lsy15', 'cjl16', 'yjy17', 'lym18', 'pr19', 'ws20', ...
-            'wn21', 'hjy22', 'qyk23', 'yd24'};
+                      'dwq11', 'ljl12', 'jyx13', 'zk14', 'lsy15', 'cjl16', 'yjy17', 'lym18', 'pr19', 'ws20', ...
+                      'wn21', 'hjy22', 'qyk23', 'yd24'};
         tInBlc = [230, 2*230, 2*230+240, rndTrial + (200 : 200 : HamTrial)];
         
     elseif isequal(ExpWord, 'ExplicitExp')
         bhvDataDir = [folder, '/FormalExp-ExplicitLearning-LynnNetwork-Results/'];
         subj_list  = {'hsp_1_m_21', 'hr_2_f_22', 'pxy_3_m_19', 'wyx_4_m_22', 'lml_5_f_19', 'lf_6_m_21', 'md_7_f_21', 'srz_8_m_20', 'fsq_9_f_18', 'caq_10_f_20', ...
-            'xjm_11_f_26', 'cjs_12_m_19', 'xxx_13_f_19', 'wsq_14_f_19', 'zzm_15_f_18', 'lsy_16_f_20', 'man_17_f_19', 'zxy_18_f_18', 'cyh_19_f_21', 'szn_20_f_19', ...
-            'sb_21_m_22', 'drq_22_f_18', 'cy_23_f_18', 'zhc_24_m_21'};
+                      'xjm_11_f_26', 'cjs_12_m_19', 'xxx_13_f_19', 'wsq_14_f_19', 'zzm_15_f_18', 'lsy_16_f_20', 'man_17_f_19', 'zxy_18_f_18', 'cyh_19_f_21', 'szn_20_f_19', ...
+                       'sb_21_m_22', 'drq_22_f_18', 'cy_23_f_18', 'zhc_24_m_21'};
         subjLab    = {'hsp1', 'hr2', 'pxy3', 'wyx4', 'lml5', 'lf6', 'md7', 'srz8', 'fsq9', 'caq10', ...
-            'xjm11', 'cjs12', 'xxx13', 'wsq14', 'zzm15', 'lsy16', 'man17', 'zxy18', 'cyh19', 'szn20', ...
-            'sb21', 'drq22', 'cy23', 'zhc24'};
+                      'xjm11', 'cjs12', 'xxx13', 'wsq14', 'zzm15', 'lsy16', 'man17', 'zxy18', 'cyh19', 'szn20', ...
+                      'sb21', 'drq22', 'cy23', 'zhc24'};
         tInBlc = [230, 2*230, 2*230+240, rndTrial + (200 : 200 : HamTrial)];
         
     elseif isequal(ExpWord, 'ImplicitRandExp')
         bhvDataDir = [folder, '/FormalExp-LynnNetwork-ImplicitRandom-Results/'];
         subj_list  = {'zyh_1_f_21', 'why_2_m_18', 'cr_3_f_19', 'zyx_4_f_25', 'wym_5_m_23', 'wd_6_f_18', 'lyh_7_f_21', 'zr_8_f_24', 'zyh_9_m_19', 'zzy_10_f_19', ...
-            'smq_11_f_25', 'sz_12_f_20', 'lzy_13_m_22', 'yxy_14_f_18', 'zxl_15_f_18', 'wqh_16_m_23', 'zxj_17_m_21', 'skx_18_f_20', 'zlh_19_m_24', 'gwt_20_f_23', ...
-            'lwn_21_f_18', 'lrp_22_m_21', 'sjj_23_f_18', 'xy_24_f_19'}; % , 'xr_18_f_23'
+                      'smq_11_f_25', 'sz_12_f_20', 'lzy_13_m_22', 'yxy_14_f_18', 'zxl_15_f_18', 'wqh_16_m_23', 'zxj_17_m_21', 'skx_18_f_20', 'zlh_19_m_24', 'gwt_20_f_23', ...
+                      'lwn_21_f_18', 'lrp_22_m_21', 'sjj_23_f_18', 'xy_24_f_19'}; % , 'xr_18_f_23'
         subjLab    = {'zyh1', 'why2', 'cr3', 'zyx4', 'wym5', 'wd6', 'lyh7', 'zr8', 'lyh9', 'zzy10', ...
-            'smq11', 'sz12', 'lzy13', 'yxy14', 'zxl15', 'wqh16', 'zxj17', 'skx18', 'zlh19', 'gwt20', ...
-            'lwn21', 'lrp22', 'sjj23', 'xy24'}; % , 'xr18'
+                      'smq11', 'sz12', 'lzy13', 'yxy14', 'zxl15', 'wqh16', 'zxj17', 'skx18', 'zlh19', 'gwt20', ...
+                      'lwn21', 'lrp22', 'sjj23', 'xy24'}; % , 'xr18'
         tInBlc = [230, 2*230, 2*230+240, rndTrial + (200 : 200 : HamTrial)];
-        
-    elseif isequal(ExpWord, 'ImplicitClusterExp')
-        bhvDataDir = [folder, '/FormalExp-ClusterComponentLearning-Results/'];
-        subj_list = {'gyl_1_f_21', 'yrl_2_f_20', 'xwh_3_m_19', 'lz_4_m_20', 'mrs_5_f_24', 'wy_6_m_24', 'ljx_7_f_26', 'hhn_8_f_19', ...
-                     'rhj_9_f_27', 'lya_10_f_20', 'lfy_11_m_24'};
-        subjLab   = {'gyl1', 'yrl2', 'xwh3', 'lz4', 'mrs5', 'wy6', 'ljx7', 'hhn8', ...
-                     'rhj9', 'lya10', 'lfy11'};
-        tInBlc = [200, 2*200, 3*200, 3*200+100, rndTrial + (200 : 200 : HamTrial)];
-        
-    elseif isequal(ExpWord, 'ImplicitRandClusterExp')
-        bhvDataDir = [folder, '/FormalExp-ImplicitRandom-ClusterComponentLearning-Results/'];
-        subj_list = {'xy_1_f_21', 'xly_2_f_21', 'wyt_3_f_23', 'zty_4_m_18', 'lyn_5_m_19', 'wyq_6_f_19', 'sy_7_f_22', 'wyh_8_f_27', 'qbj_9_f_25', 'lt_10_m_23', ...
-                     'gjy_11_f_23', 'wyh_12_m_23', 'zwq_13_m_22'}; % , 'wc_14_f_23'
-        subjLab   = {'xy1', 'xly2', 'wyt3', 'zty4', 'lyn5', 'wyq6', 'sy7', 'wyh8', 'qbj9', 'lt10', ...
-                     'gjy11', 'wyh12', 'zwq13'}; % , 'wc14' 
-        tInBlc = [200, 2*200, 3*200, 3*200+100, rndTrial + (200 : 200 : HamTrial)];
+
     end
     nBlock = length(tInBlc); %% seperate the total trials into 10 blocks
     trialsInBlc = zeros(nBlock, 2);
@@ -174,18 +156,18 @@ for iExp = 1 : length(expList)
     subj_listBv = subj_list;
     subLen      = length(subj_list);
     
-    %% fitting for single subject
+    %% loop over all trials
     %%% merge all trials
-    angAcc  = zeros(subLen, length(circle_list)); %% accuracy in each time point
-    lenData = zeros(subLen, length(circle_list)); %% data length in each time point
-    angAcc_dtr = zeros(subLen, length(circle_list), 3); % 3 means distractor number categories
+    angAcc          = zeros(subLen, length(circle_list)); %% accuracy in each time point
+    lenData         = zeros(subLen, length(circle_list)); %% data length in each time point
+    angAcc_dtr      = zeros(subLen, length(circle_list), 3); % 3 means distractor number categories
     %%% only for the Random trials
-    angAcc_Rand  = zeros(subLen, length(circle_list)); %% accuracy in each time point
-    lenData_Rand = zeros(subLen, length(circle_list)); %% data length in each time point
+    angAcc_Rand     = zeros(subLen, length(circle_list)); %% accuracy in each time point
+    lenData_Rand    = zeros(subLen, length(circle_list)); %% data length in each time point
     angAcc_dtr_Rand = zeros(subLen, length(circle_list), 3); % 3 means distractor number categories
     %%% only for the Hamiltonian trials
-    angAcc_Hami  = zeros(subLen, length(circle_list)); %% accuracy in each time point
-    lenData_Hami = zeros(subLen, length(circle_list)); %% data length in each time point
+    angAcc_Hami     = zeros(subLen, length(circle_list)); %% accuracy in each time point
+    lenData_Hami    = zeros(subLen, length(circle_list)); %% data length in each time point
     angAcc_dtr_Hami = zeros(subLen, length(circle_list), 3); % 3 means distractor number categories
     for iSub = 1 : subLen
         disp([ExpWord, '-subj', num2str(iSub)]);
@@ -193,11 +175,8 @@ for iExp = 1 : length(expList)
         subID  = subjLab{iSub};
         subjBv = subj_listBv{iSub};
         subjDir = [bhvDataDir, subjBv, '/'];
-        if isequal(ExpWord, 'ImplicitClusterExp') || isequal(ExpWord, 'ImplicitRandClusterExp')
-            load([subjDir, subjBv, 'clusterResult_reOrg.mat'], 'clusterResult');
-        else
-            load([subjDir, subjBv, 'clusterResult_Blocks.mat'], 'clusterResult');
-        end
+        load([subjDir, subjBv, 'clusterResult_Blocks.mat'], 'clusterResult');
+
         trials_Col   = (1 : 1 : nTrials)';
         respRT_Col   = clusterResult(:, respRT);
         errorIdx_Col = clusterResult(:, errorIdx);
@@ -225,9 +204,6 @@ for iExp = 1 : length(expList)
         %%% mouse trajectory trials
         load([subjDir, subjBv,  'respYes_trials_blc.mat'], 'respYes_trials_blc');
         load([subjDir, subjBv,  'mouseTraj_trials_blc.mat'], 'mouseTraj_trials_blc');
-        if isequal(ExpWord, 'ImplicitRandClusterExp')
-            load([subjDir, subjBv, 'trialsInBlc.mat'], 'trialsInBlc');
-        end
         
         %%% !!!!!!!! remove the time-out trials !!!!!!!! %%%
         stim = clusterResult(:, objTgt);
@@ -387,7 +363,6 @@ for iExp = 1 : length(expList)
     angAcc_dtr_Hami_exp(1 : subLen, :, :, iExp) = angAcc_dtr_Hami;
 
 end
-
 
 %% color settings
 colorSets = [0.98, 0.72, 0.69; ...

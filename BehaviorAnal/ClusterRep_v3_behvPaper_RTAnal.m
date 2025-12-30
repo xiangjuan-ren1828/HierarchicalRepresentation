@@ -15,10 +15,10 @@ addpath('tight_subplot/');
 addpath(genpath('HierarchicalCluster/'));
 
 %% Subject
-ExpWord_List = {'cue', 'explicit', 'cueRand'};
+ExpWord_List = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'};
 ExpIdx       = 2;
 ExpWord      = ExpWord_List{ExpIdx};
-if isequal(ExpWord, 'cue')
+if isequal(ExpWord, 'ImplicitExp')
     subj_list = {'wsn_1_f_18', 'dy_2_f_22', 'haq_3_f_24', 'hry_4_f_20', 'zjx_5_m_20', 'yyq_6_f_18', 'zkw_7_m_18', 'zy_8_f_20', 'hys_9_m_20', 'cjj_10_m_18', ...
                  'dwq_11_f_22', 'ljl_12_m_20', 'jyx_13_m_19', 'zk_14_f_21', 'lsy_15_m_19', 'cjl_16_m_19', 'yjy_17_f_23', 'lym_18_f_19', 'pr_19_f_23', 'ws_20_f_21', ...
                  'wn_21_f_21', 'hjy_22_f_18', 'qyk_23_f_22', 'yd_24_f_20'};
@@ -32,7 +32,7 @@ if isequal(ExpWord, 'cue')
                    'F', 'M', 'M', 'F', 'M', 'M', 'F', 'F', 'F', 'F', ...
                    'F', 'F', 'F', 'F'};
 
-elseif isequal(ExpWord, 'explicit')
+elseif isequal(ExpWord, 'ExplicitExp')
     subj_list = {'hsp_1_m_21', 'hr_2_f_22', 'pxy_3_m_19', 'wyx_4_m_22', 'lml_5_f_19', 'lf_6_m_21', 'md_7_f_21', 'srz_8_m_20', 'fsq_9_f_18', 'caq_10_f_20', ...
                  'xjm_11_f_26', 'cjs_12_m_19', 'xxx_13_f_19', 'wsq_14_f_19', 'zzm_15_f_18', 'lsy_16_f_20', 'man_17_f_19', 'zxy_18_f_18', 'cyh_19_f_21', 'szn_20_f_19', ...
                  'sb_21_m_22', 'drq_22_f_18', 'cy_23_f_18', 'zhc_24_m_21'}; 
@@ -46,7 +46,7 @@ elseif isequal(ExpWord, 'explicit')
                    'F', 'M', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', ...
                    'M', 'F', 'F', 'M'};
 
-elseif isequal(ExpWord, 'cueRand')
+elseif isequal(ExpWord, 'ImplicitRandExp')
     subj_list = {'zyh_1_f_21', 'why_2_m_18', 'cr_3_f_19', 'zyx_4_f_25', 'wym_5_m_23', 'wd_6_f_18', 'lyh_7_f_21', 'zr_8_f_24', 'zyh_9_m_19', 'zzy_10_f_19', ...
                  'smq_11_f_25', 'sz_12_f_20', 'lzy_13_m_22', 'yxy_14_f_18', 'zxl_15_f_18', 'wqh_16_m_23', 'zxj_17_m_21', 'skx_18_f_20', 'zlh_19_m_24', 'gwt_20_f_23', ...
                  'lwn_21_f_18', 'lrp_22_m_21', 'sjj_23_f_18', 'xy_24_f_19'}; % , 'xr_18_f_23'
@@ -75,11 +75,11 @@ length(subjGenders)
 
 %% Experiment parameters
 folder = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
-if isequal(ExpWord, 'cue')
+if isequal(ExpWord, 'ImplicitExp')
     bhvDataDir = [folder, '/FormalExp-LynnNetwork-Results/']; 
-elseif isequal(ExpWord, 'explicit')
+elseif isequal(ExpWord, 'ExplicitExp')
     bhvDataDir = [folder, '/FormalExp-ExplicitLearning-LynnNetwork-Results/'];
-elseif isequal(ExpWord, 'cueRand')
+elseif isequal(ExpWord, 'ImplicitRandExp')
     bhvDataDir = [folder, '/FormalExp-LynnNetwork-ImplicitRandom-Results/'];
 end
 rndTrial = 700;
@@ -175,9 +175,9 @@ for SubIdx = 1 : subLen
     for iBlock = 1 : nBlock
         ttBlcIdx  = (trialsInBlc(iBlock, 1) : trialsInBlc(iBlock, 2))';
         trialsBlc = length(ttBlcIdx);
-        if isequal(ExpWord, 'cue') || isequal(ExpWord, 'cueRand')
+        if isequal(ExpWord, 'ImplicitExp') || isequal(ExpWord, 'ImplicitRandExp')
             predRatio(SubIdx, iBlock) = length(find(respRT_Col(ttBlcIdx) <= grayoffT & errorIdx_Col(ttBlcIdx) ~= 1 & fast_Col(ttBlcIdx) ~= 1)) / trialsBlc; %% equaling to the ratio of 100 bonus
-        elseif isequal(ExpWord, 'explicit')
+        elseif isequal(ExpWord, 'ExplicitExp')
             predRatio(SubIdx, iBlock) = length(find(bonus_Col(ttBlcIdx) == marioWin & errorIdx_Col(ttBlcIdx) ~= 1 & fast_Col(ttBlcIdx) ~= 1)) / trialsBlc; 
         end
         errRatio(SubIdx, iBlock)  = length(find(errorIdx_Col(ttBlcIdx) == 1 | timeOIdx_Col(ttBlcIdx) == 1)) / trialsBlc;

@@ -13,24 +13,24 @@ addpath('tight_subplot/');
 addpath(genpath('HierarchicalCluster/'));
 
 %% Subject
-ExpWord_List = {'cue', 'explicit', 'cueRand'};
+ExpWord_List = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'};
 ExpIdx       = 3;
 ExpWord      = ExpWord_List{ExpIdx};
-if isequal(ExpWord, 'cue')
+if isequal(ExpWord, 'ImplicitExp')
     subj_list = {'wsn_1_f_18', 'dy_2_f_22', 'haq_3_f_24', 'hry_4_f_20', 'zjx_5_m_20', 'yyq_6_f_18', 'zkw_7_m_18', 'zy_8_f_20', 'hys_9_m_20', 'cjj_10_m_18', ...
                  'dwq_11_f_22', 'ljl_12_m_20', 'jyx_13_m_19', 'zk_14_f_21', 'lsy_15_m_19', 'cjl_16_m_19', 'yjy_17_f_23', 'lym_18_f_19', 'pr_19_f_23', 'ws_20_f_21', ...
                  'wn_21_f_21', 'hjy_22_f_18', 'qyk_23_f_22', 'yd_24_f_20'};
     subjLab   = {'wsn1', 'dy2', 'haq3', 'hry4', 'zjx5', 'yyq6', 'zkw7', 'zy8', 'hys9', 'cjj10', ...
                  'dwq11', 'ljl12', 'jyx13', 'zk14', 'lsy15', 'cjl16', 'yjy17', 'lym18', 'pr19', 'ws20', ...
                  'wn21', 'hjy22', 'qyk23', 'yd24'};
-elseif isequal(ExpWord, 'explicit')
+elseif isequal(ExpWord, 'ExplicitExp')
     subj_list = {'hsp_1_m_21', 'hr_2_f_22', 'pxy_3_m_19', 'wyx_4_m_22', 'lml_5_f_19', 'lf_6_m_21', 'md_7_f_21', 'srz_8_m_20', 'fsq_9_f_18', 'caq_10_f_20', ...
                  'xjm_11_f_26', 'cjs_12_m_19', 'xxx_13_f_19', 'wsq_14_f_19', 'zzm_15_f_18', 'lsy_16_f_20', 'man_17_f_19', 'zxy_18_f_18', 'cyh_19_f_21', 'szn_20_f_19', ...
                  'sb_21_m_22', 'drq_22_f_18', 'cy_23_f_18', 'zhc_24_m_21'}; 
     subjLab   = {'hsp1', 'hr2', 'pxy3', 'wyx4', 'lml5', 'lf6', 'md7', 'srz8', 'fsq9', 'caq10', ...
                  'xjm11', 'cjs12', 'xxx13', 'wsq14', 'zzm15', 'lsy16', 'man17', 'zxy18', 'cyh19', 'szn20', ...
                  'sb21', 'drq22', 'cy23', 'zhc24'};  
-elseif isequal(ExpWord, 'cueRand')
+elseif isequal(ExpWord, 'ImplicitRandExp')
     subj_list = {'zyh_1_f_21', 'why_2_m_18', 'cr_3_f_19', 'zyx_4_f_25', 'wym_5_m_23', 'wd_6_f_18', 'lyh_7_f_21', 'zr_8_f_24', 'zyh_9_m_19', 'zzy_10_f_19', ...
                  'smq_11_f_25', 'sz_12_f_20', 'lzy_13_m_22', 'yxy_14_f_18', 'zxl_15_f_18', 'wqh_16_m_23', 'zxj_17_m_21', 'skx_18_f_20', 'zlh_19_m_24', 'gwt_20_f_23', ...
                  'lwn_21_f_18', 'lrp_22_m_21', 'sjj_23_f_18', 'xy_24_f_19'}; % , 'xr_18_f_23'
@@ -44,15 +44,14 @@ subLen      = length(subj_list);
 
 %% Experiment parameters
 folder = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
-if isequal(ExpWord, 'cue')
+if isequal(ExpWord, 'ImplicitExp')
     bhvDataDir = [folder, '/FormalExp-LynnNetwork-Results/'];
-elseif isequal(ExpWord, 'explicit')
+elseif isequal(ExpWord, 'ExplicitExp')
     bhvDataDir = [folder, '/FormalExp-ExplicitLearning-LynnNetwork-Results/'];
-elseif isequal(ExpWord, 'cueRand')
+elseif isequal(ExpWord, 'ImplicitRandExp')
     bhvDataDir = [folder, '/FormalExp-LynnNetwork-ImplicitRandom-Results/'];
-elseif isequal(ExpWord, 'cueEyeTrack')
-    bhvDataDir = [folder, '/EyeTrackFormalExp-LynnNetwork-Results/'];
 end
+
 rndTrial = 700;
 HamTrial = 800; 
 nTrials  = rndTrial + HamTrial;
@@ -194,7 +193,7 @@ transOut_clsOutDtr{6} = [15, 1, 2; 15, 1, 3; 15, 1, 4];
 %% indicating the distractor
 dtrCond = input('DistractorNo condition, 1-one, 2-two, 3-three, 4-merged: '); % only trials with 1, 2, 3 distractors or 4 (merge all kinds of distractors)
 
-%% calculations
+%% calculations: both RTs and choice accuracy
 RT_transIn_subj  = zeros(bndNode_Num, 2, subLen);
 RT_transOut_subj = zeros(bndNode_Num, 2, subLen);
 transIn_Len  = zeros(bndNode_Num, 2, subLen);
@@ -298,16 +297,10 @@ colorBehv = colorSet([1, 3], :);
 colorSubj = colorSet([1, 2, 3, 9], :);
 colorTrans = colorSet([1, 2, 3, 9, 10], :);
 
-% colorFace  = [167, 214, 221; ...
-%              61, 142, 143; ...
-%              131, 185, 199] ./ [255, 255, 255]; 
-% redColor   = 0.6 * [1, 0.64, 0] + 0.4 * [1, 1, 1];
-
-
 %% average
 %%% paired-sample t test
-RT_transIn_nodeAvg  = squeeze(nanmean(RT_transIn_subj, 1)); % 2 * subLen
-RT_transOut_nodeAvg = squeeze(nanmean(RT_transOut_subj, 1));
+RT_transIn_nodeAvg     = squeeze(nanmean(RT_transIn_subj, 1)); % 2 * subLen
+RT_transOut_nodeAvg    = squeeze(nanmean(RT_transOut_subj, 1));
 RT_transInDif_nodeAvg  = squeeze(nanmean(RT_transIn_subj(:, 2, :) - RT_transIn_subj(:, 1, :), 1)); % 1 * subLen
 RT_transOutDif_nodeAvg = squeeze(nanmean(RT_transOut_subj(:, 2, :) - RT_transOut_subj(:, 1, :), 1)); 
 
@@ -322,6 +315,11 @@ barPos = [0.5, 1; 1.2, 1.7];
 figure('Position', [100 100 350 200]), clf;
 hold on;
 for iTrans = 1 : 2 % within- & between-transitions
+    if iTrans == 1
+        transWord = 'boundary-to-within';
+    elseif iTrans == 2
+        transWord = 'boundary-to-boundary';
+    end
     barPos_i = barPos(iTrans, :);
     if iTrans == 1
         transAvg = transIn_avg;
@@ -340,7 +338,7 @@ for iTrans = 1 : 2 % within- & between-transitions
     errorbar(barPos_i(2), transAvg(2), transSem(2), 'Color', colorBehv(iTrans, :), 'Marker', '.', 'MarkerFaceColor', colorBehv(iTrans, :), 'LineStyle', '-', 'LineWidth', 2, 'MarkerSize', 15); 
 
     [h, p, ci, stats] = ttest(data_i(:, 1), data_i(:, 2), 'Tail', tail_id)
-    disp(['==============', num2str(iTrans), '==============']);
+    disp(['============== ', transWord, ': with vs. without lure ==============']);
     disp(['t=', num2str(stats.tstat, '%4.3f'), ', p=', num2str(p, '%4.3f')])
 end
 set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
@@ -348,8 +346,6 @@ set(gca, 'XTick', '', 'XTickLabel', '');
 xlim([0.3, 1.9]);
 ylim([0.5, 2]);
 box off;
-
-
 
 
 
