@@ -1,7 +1,8 @@
 % ClusterRep_v3_RTAnal_lureDtr
 % write by rxj @ 10/25/2021
 %
-% RT with lure distractors
+% RT or choiceAccuracy with lure distractors –– matched the distance
+% between the cue to the lure stimulus or to the non-lure stimulus
 
 %%
 clear
@@ -12,7 +13,7 @@ addpath('tight_subplot/');
 addpath(genpath('HierarchicalCluster/'));
 
 %% Subject
-ExpWord_List = {'cue', 'explicit', 'cueRand', 'cueEyeTrack'};
+ExpWord_List = {'cue', 'explicit', 'cueRand'};
 ExpIdx       = 3;
 ExpWord      = ExpWord_List{ExpIdx};
 if isequal(ExpWord, 'cue')
@@ -35,19 +36,14 @@ elseif isequal(ExpWord, 'cueRand')
                  'lwn_21_f_18', 'lrp_22_m_21', 'sjj_23_f_18', 'xy_24_f_19'}; % , 'xr_18_f_23'
     subjLab   = {'zyh1', 'why2', 'cr3', 'zyx4', 'wym5', 'wd6', 'lyh7', 'zr8', 'lyh9', 'zzy10', ...
                  'smq11', 'sz12', 'lzy13', 'yxy14', 'zxl15', 'wqh16', 'zxj17', 'skx18', 'zlh19', 'gwt20', ...
-                 'lwn21', 'lrp22', 'sjj23', 'xy24'}; % , 'xr18'
-elseif isequal(ExpWord, 'cueEyeTrack')
-    subj_list = {'mcaj_1_f_20', 'yjw_2_f_21', 'lyc_3_m_20', 'cjq_4_f_18', 'lmh_5_f_19', 'lh_6_f_19', 'stj_7_f_20', 'ljl_8_m_21', 'csx_10_m_20', 'ljj_11_f_24', 'lx_12_m_19',  ...
-                 'lyc_13_f_17', 'jzc_14_m_24', 'lzz_15_m_22', 'wzx_16_m_22', 'mym_17_f_18', 'ys_18_f_18', 'djh_19_m_18'}; % without eye data: 'mcaj_1_f_20', 'cjq_4_f_18'
-    subjLab   = {'mcaj1', 'yjw2', 'lyc3', 'cjq4', 'lmh5', 'lh6', 'stj7', 'ljl8', 'csx10', 'ljj11', 'lx12', ...
-                 'lyc13', 'jzc14', 'lzz15', 'wzx16', 'mym17', 'ys18', 'djh19'}; % 'mcaj1', 'cjq4'    
+                 'lwn21', 'lrp22', 'sjj23', 'xy24'}; % , 'xr18' 
 end
 subjNum   = 1 : length(subj_list);
 subj_listBv = subj_list;
 subLen      = length(subj_list);
 
 %% Experiment parameters
-folder = '/Users/renxiangjuan/Nextcloud/MATLAB/MyExperiment/HierarchicalCluster';
+folder = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 if isequal(ExpWord, 'cue')
     bhvDataDir = [folder, '/FormalExp-LynnNetwork-Results/'];
 elseif isequal(ExpWord, 'explicit')
@@ -111,6 +107,7 @@ fastIdx  = 25;
 
 %% For the boundary node, if another boundary within the same cluster exists, how about the RTs?
 % added by rxj @ 08/24/2021
+% !!!!!! match the distance between the lure stimulus and non-lure stimulus !!!!!!
 %% within-cluster transtions
 bndNode_Num = 6;
 transIn_clsInDtr = cell(1, bndNode_Num);
@@ -194,8 +191,10 @@ transOut_clsOutDtr{4} = [10, 11, 12; 10, 11, 13; 10, 11, 14];
 transOut_clsOutDtr{5} = [11, 10, 7; 11, 10, 8; 11, 10, 9];
 transOut_clsOutDtr{6} = [15, 1, 2; 15, 1, 3; 15, 1, 4];
 
+%% indicating the distractor
+dtrCond = input('DistractorNo condition, 1-one, 2-two, 3-three, 4-merged: '); % only trials with 1, 2, 3 distractors or 4 (merge all kinds of distractors)
+
 %% calculations
-dtrCond = 1; % only trials with 1, 2, 3 distractors or 4 (merge all kinds of distractors)
 RT_transIn_subj  = zeros(bndNode_Num, 2, subLen);
 RT_transOut_subj = zeros(bndNode_Num, 2, subLen);
 transIn_Len  = zeros(bndNode_Num, 2, subLen);
