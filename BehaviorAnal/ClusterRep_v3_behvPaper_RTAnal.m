@@ -15,7 +15,7 @@ addpath('tight_subplot/');
 addpath(genpath('HierarchicalCluster/'));
 
 %% Subject
-ExpWord_List = {'cue', 'explicit', 'cueRand', 'cueEyeTrack'};
+ExpWord_List = {'cue', 'explicit', 'cueRand'};
 ExpIdx       = 1;
 ExpWord      = ExpWord_List{ExpIdx};
 if isequal(ExpWord, 'cue')
@@ -25,6 +25,13 @@ if isequal(ExpWord, 'cue')
     subjLab   = {'wsn1', 'dy2', 'haq3', 'hry4', 'zjx5', 'yyq6', 'zkw7', 'zy8', 'hys9', 'cjj10', ...
                  'dwq11', 'ljl12', 'jyx13', 'zk14', 'lsy15', 'cjl16', 'yjy17', 'lym18', 'pr19', 'ws20', ...
                  'wn21', 'hjy22', 'qyk23', 'yd24'};
+    subjAges    = [18, 22, 24, 20, 20, 18, 18, 20, 20, 18, ...
+                   22, 20, 19, 21, 19, 19, 23, 19, 23, 21, ...
+                   21, 18, 22, 20];
+    subjGenders = {'F', 'F', 'F', 'F', 'M', 'F', 'M', 'F', 'M', 'M', ...
+                   'F', 'M', 'M', 'F', 'M', 'M', 'F', 'F', 'F', 'F', ...
+                   'F', 'F', 'F', 'F'};
+
 elseif isequal(ExpWord, 'explicit')
     subj_list = {'hsp_1_m_21', 'hr_2_f_22', 'pxy_3_m_19', 'wyx_4_m_22', 'lml_5_f_19', 'lf_6_m_21', 'md_7_f_21', 'srz_8_m_20', 'fsq_9_f_18', 'caq_10_f_20', ...
                  'xjm_11_f_26', 'cjs_12_m_19', 'xxx_13_f_19', 'wsq_14_f_19', 'zzm_15_f_18', 'lsy_16_f_20', 'man_17_f_19', 'zxy_18_f_18', 'cyh_19_f_21', 'szn_20_f_19', ...
@@ -32,6 +39,13 @@ elseif isequal(ExpWord, 'explicit')
     subjLab   = {'hsp1', 'hr2', 'pxy3', 'wyx4', 'lml5', 'lf6', 'md7', 'srz8', 'fsq9', 'caq10', ...
                  'xjm11', 'cjs12', 'xxx13', 'wsq14', 'zzm15', 'lsy16', 'man17', 'zxy18', 'cyh19', 'szn20', ...
                  'sb21', 'drq22', 'cy23', 'zhc24'};  
+    subjAges    = [21, 22, 19, 22, 19, 21, 21, 20, 18, 20, ...
+                   26, 19, 19, 19, 18, 20, 19, 18, 21, 19, ...
+                   22, 18, 18, 21];
+    subjGenders = {'M', 'F', 'M', 'M', 'F', 'M', 'F', 'M', 'F', 'F', ...
+                   'F', 'M', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', ...
+                   'M', 'F', 'F', 'M'};
+
 elseif isequal(ExpWord, 'cueRand')
     subj_list = {'zyh_1_f_21', 'why_2_m_18', 'cr_3_f_19', 'zyx_4_f_25', 'wym_5_m_23', 'wd_6_f_18', 'lyh_7_f_21', 'zr_8_f_24', 'zyh_9_m_19', 'zzy_10_f_19', ...
                  'smq_11_f_25', 'sz_12_f_20', 'lzy_13_m_22', 'yxy_14_f_18', 'zxl_15_f_18', 'wqh_16_m_23', 'zxj_17_m_21', 'skx_18_f_20', 'zlh_19_m_24', 'gwt_20_f_23', ...
@@ -39,27 +53,34 @@ elseif isequal(ExpWord, 'cueRand')
     subjLab   = {'zyh1', 'why2', 'cr3', 'zyx4', 'wym5', 'wd6', 'lyh7', 'zr8', 'lyh9', 'zzy10', ...
                  'smq11', 'sz12', 'lzy13', 'yxy14', 'zxl15', 'wqh16', 'zxj17', 'skx18', 'zlh19', 'gwt20', ...
                  'lwn21', 'lrp22', 'sjj23', 'xy24'}; % , 'xr18'
-elseif isequal(ExpWord, 'cueEyeTrack')
-    subj_list = {'mcaj_1_f_20', 'yjw_2_f_21', 'lyc_3_m_20', 'cjq_4_f_18', 'lmh_5_f_19', 'lh_6_f_19', 'stj_7_f_20', 'ljl_8_m_21', 'csx_10_m_20', 'ljj_11_f_24', 'lx_12_m_19',  ...
-                 'lyc_13_f_17', 'jzc_14_m_24', 'lzz_15_m_22', 'wzx_16_m_22', 'mym_17_f_18', 'ys_18_f_18', 'djh_19_m_18'}; % without eye data: 'mcaj_1_f_20', 'cjq_4_f_18'
-    subjLab   = {'mcaj1', 'yjw2', 'lyc3', 'cjq4', 'lmh5', 'lh6', 'stj7', 'ljl8', 'csx10', 'ljj11', 'lx12', ...
-                 'lyc13', 'jzc14', 'lzz15', 'wzx16', 'mym17', 'ys18', 'djh19'}; % 'mcaj1', 'cjq4'    
+    subjAges    = [21, 18, 19, 25, 23, 18, 21, 24, 19, 19, ...
+                   25, 20, 22, 18, 18, 23, 21, 20, 24, 23, ...
+                   18, 21, 18, 19];
+    subjGenders = {'F', 'M', 'F', 'F', 'M', 'F', 'F', 'F', 'M', 'F', ...
+                   'F', 'F', 'M', 'F', 'F', 'M', 'M', 'F', 'M', 'F', ...
+                   'F', 'M', 'F', 'F'};
 end
 subjNum   = 1 : length(subj_list);
 subj_listBv = subj_list;
 subLen      = length(subj_list);
 
+%% quantify the age and gender
+disp('---------- Age of YAs ----------');
+[mean_age, sem_age] = Mean_and_Se(subjAges')
+
+disp('---------- Females in YAs----------');
+sum(strcmp(subjGenders, 'F'))
+length(subjGenders)
+
+
 %% Experiment parameters
-%folder     = pwd;
-folder = '/Users/renxiangjuan/Nextcloud/MATLAB/MyExperiment/HierarchicalCluster';
+folder = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 if isequal(ExpWord, 'cue')
     bhvDataDir = [folder, '/FormalExp-LynnNetwork-Results/']; 
 elseif isequal(ExpWord, 'explicit')
     bhvDataDir = [folder, '/FormalExp-ExplicitLearning-LynnNetwork-Results/'];
 elseif isequal(ExpWord, 'cueRand')
     bhvDataDir = [folder, '/FormalExp-LynnNetwork-ImplicitRandom-Results/'];
-elseif isequal(ExpWord, 'cueEyeTrack')
-    bhvDataDir = [folder, '/EyeTrackFormalExp-LynnNetwork-Results/'];
 end
 rndTrial = 700;
 HamTrial = 800; 
@@ -123,24 +144,22 @@ baseAcc      = zeros(subLen, 1);
 transTpAcc   = zeros(subLen, 2); %% correct response ratio in within- and between-cluster transitions
 transTpAcc_lure = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-RTsubj    = zeros(nTrials, subLen);
-RTtransTp = zeros(subLen, 2);
-RTtransTp_type = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
-RTtransTp_Blc  = zeros(subLen, 2, nBlock);
-RTtransTp_type_Blc = cell(1, 2); % random vs. hamiltonian walks
-RTtransTp_lure = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
-lureTrialLen   = zeros(subLen, 2 * 2);
+RTsubj              = zeros(nTrials, subLen);
+RTtransTp           = zeros(subLen, 2);
+RTtransTp_type      = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+RTtransTp_Blc       = zeros(subLen, 2, nBlock);
+RTtransTp_type_Blc  = cell(1, 2); % random vs. hamiltonian walks
+RTtransTp_lure      = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
+lureTrialLen        = zeros(subLen, 2 * 2);
 RTtransTp_type_lure = zeros(subLen, 2, 2, 2); % the last 2 denotes 'random and hamiltonian' walk
+RToverall_Blc_dtNum = zeros(subLen, 3, nBlock); % 3 distractor conditions
 lme_subj = [];
 for SubIdx = 1 : subLen
     subjBv      = subj_listBv{SubIdx};
     subTit      = subjLab{SubIdx};
     subjDir     = [bhvDataDir, subjBv, '/'];
-    if isequal(ExpWord, 'cueEyeTrack')
-        load([subjDir, subjBv, 'clusterResult_BlocksMouse.mat'], 'clusterResult');
-    else
-        load([subjDir, subjBv, 'clusterResult_Blocks.mat'], 'clusterResult');
-    end
+    load([subjDir, subjBv, 'clusterResult_Blocks.mat'], 'clusterResult');
+
     trials_Col   = (1 : 1 : nTrials)';
     respRT_Col   = clusterResult(:, respRT);
     errorIdx_Col = clusterResult(:, errorIdx);
@@ -156,7 +175,7 @@ for SubIdx = 1 : subLen
     for iBlock = 1 : nBlock
         ttBlcIdx  = (trialsInBlc(iBlock, 1) : trialsInBlc(iBlock, 2))';
         trialsBlc = length(ttBlcIdx);
-        if isequal(ExpWord, 'cue') || isequal(ExpWord, 'cueEyeTrack') || isequal(ExpWord, 'cueRand')
+        if isequal(ExpWord, 'cue') || isequal(ExpWord, 'cueRand')
             predRatio(SubIdx, iBlock) = length(find(respRT_Col(ttBlcIdx) <= grayoffT & errorIdx_Col(ttBlcIdx) ~= 1 & fast_Col(ttBlcIdx) ~= 1)) / trialsBlc; %% equaling to the ratio of 100 bonus
         elseif isequal(ExpWord, 'explicit')
             predRatio(SubIdx, iBlock) = length(find(bonus_Col(ttBlcIdx) == marioWin & errorIdx_Col(ttBlcIdx) ~= 1 & fast_Col(ttBlcIdx) ~= 1)) / trialsBlc; 
@@ -190,7 +209,7 @@ for SubIdx = 1 : subLen
     nodesLabel = zeros(nTrials, 1);
     nodesLabel(from_nodes == 1 | from_nodes == 5 | from_nodes == 6 | from_nodes == 10 | from_nodes == 11 | from_nodes == 15) = 1;
     dtNum = arrayfun(@(x) length(find(dt_nodes(x, :)~=0)), (1 : nTrials)');
-    
+  
     %% baseline accuracy for each subject
     baseAcc(SubIdx, 1) = 1/2 * ((length(find(dtNum == 2))) / length(dtNum)) + ...
                          1/3 * ((length(find(dtNum == 3))) / length(dtNum)) + ...
@@ -203,12 +222,15 @@ for SubIdx = 1 : subLen
     
     %% Accuracy comparison: lure distractor exists vs. none
     % added by rxj @ 08/30/2021
+    % 2nd dimension: lure stimulus exists or not;
+    % 3rd dimension: within-cluster transition or between-cluster
+    % transition
     transTpAcc_lure(SubIdx, 1, 1) = length(find(nodesLabel == 1 & transStyle == 1 & lureIn == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1)) / length(find(nodesLabel == 1 & transStyle == 1 & lureIn == 1));
     transTpAcc_lure(SubIdx, 1, 2) = length(find(nodesLabel == 1 & transStyle ~= 1 & lureIn == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1)) / length(find(nodesLabel == 1 & transStyle ~= 1 & lureIn == 1));
     transTpAcc_lure(SubIdx, 2, 1) = length(find(nodesLabel == 1 & transStyle == 1 & lureIn == 0 & errorIdx_Col ~= 1 & fast_Col ~= 1)) / length(find(nodesLabel == 1 & transStyle == 1 & lureIn == 0));
     transTpAcc_lure(SubIdx, 2, 2) = length(find(nodesLabel == 1 & transStyle ~= 1 & lureIn == 0 & errorIdx_Col ~= 1 & fast_Col ~= 1)) / length(find(nodesLabel == 1 & transStyle ~= 1 & lureIn == 0));
     
-    %% Comparison: lure distractor exists vs. none
+    %% RT Comparison: lure distractor exists vs. none
     %RTtransTp_lure = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
     RTtransTp_lure(SubIdx, 1, 1) = mean(respRT_Col(find(nodesLabel == 1 & transStyle == 1 & lureIn == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1)));
     RTtransTp_lure(SubIdx, 1, 2) = mean(respRT_Col(find(nodesLabel == 1 & transStyle ~= 1 & lureIn == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1)));
@@ -224,11 +246,12 @@ for SubIdx = 1 : subLen
     %RTtransTp_type_lure = zeros(subLen, 2, 2, 2); % the last 2 denotes 'random and hamiltonian' walk
     %%% wtihin vs. between cluster transition RTs separately for random and
     %%% hamiltonian walk
+    % ------ lure stimulus exists ------
     RTtransTp_type_lure(SubIdx, 1, 1, 1) = mean(respRT_Col(find(nodesLabel == 1 & transStyle == 1 & lureIn == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1))); %% rndHam_Col == 1: random trial
     RTtransTp_type_lure(SubIdx, 1, 2, 1) = mean(respRT_Col(find(nodesLabel == 1 & transStyle ~= 1 & lureIn == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1))); 
     RTtransTp_type_lure(SubIdx, 1, 1, 2) = mean(respRT_Col(find(nodesLabel == 1 & transStyle == 1 & lureIn == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2))); %% rndHam_Col == 2: hamiltonian trial
     RTtransTp_type_lure(SubIdx, 1, 2, 2) = mean(respRT_Col(find(nodesLabel == 1 & transStyle ~= 1 & lureIn == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2))); 
-    
+    % ------ no lure stimulus ------
     RTtransTp_type_lure(SubIdx, 2, 1, 1) = mean(respRT_Col(find(nodesLabel == 1 & transStyle == 1 & lureIn == 0 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1)));
     RTtransTp_type_lure(SubIdx, 2, 2, 1) = mean(respRT_Col(find(nodesLabel == 1 & transStyle ~= 1 & lureIn == 0 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1)));
     RTtransTp_type_lure(SubIdx, 2, 1, 2) = mean(respRT_Col(find(nodesLabel == 1 & transStyle == 1 & lureIn == 0 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2)));
@@ -243,13 +266,13 @@ for SubIdx = 1 : subLen
     RTtransTp_type(SubIdx, 1, 2) =  mean(respRT_Col(find(transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2))); %% rndHam_Col == 2: hamiltonian trial
     RTtransTp_type(SubIdx, 2, 1) =  mean(respRT_Col(find(transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1)));
     RTtransTp_type(SubIdx, 2, 2) =  mean(respRT_Col(find(transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2)));
-    %%% within vs. between cluster transition RTs across blocks
+    %% within vs. between cluster transition RTs across blocks
     for iBlock = 1 : nBlock
         ttBlcIdx = (trialsInBlc(iBlock, 1) : trialsInBlc(iBlock, 2))';
         RTtransTp_Blc(SubIdx, 1, iBlock) = mean(respRT_Col(find((trials_Col >= ttBlcIdx(1) & trials_Col <= ttBlcIdx(end)) & transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1)));
         RTtransTp_Blc(SubIdx, 2, iBlock) = mean(respRT_Col(find((trials_Col >= ttBlcIdx(1) & trials_Col <= ttBlcIdx(end)) & transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1)));
     end
-    %%% within vs. between cluster transition RTs across blocks seperately for random and hamiltonian walk
+    %% within vs. between cluster transition RTs across blocks seperately for random and hamiltonian walk
     for rOh = 1 : 2 % RTtransTp_type_Blc = cell(1, 2);
         for iBlock = 1 : nBlock
             ttBlcIdx = (trialsInBlc(iBlock, 1) : trialsInBlc(iBlock, 2))';
@@ -257,7 +280,16 @@ for SubIdx = 1 : subLen
             RTtransTp_type_Blc{rOh}(SubIdx, 2, iBlock) = mean(respRT_Col(find((trials_Col >= ttBlcIdx(1) & trials_Col <= ttBlcIdx(end)) & transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == rOh)));
         end
     end
-    %%% table for the lme test: RT, 
+    %% RTs with different distractor numbers
+    dtNum = dtNum - 1;
+    for iDt = 1 : length(dtrNums) % RToverall_Blc_dtNum = zeros(subLen, 3, nBlock); % 3 distractor conditions
+        for iBlock = 1 : nBlock
+            ttBlcIdx = (trialsInBlc(iBlock, 1) : trialsInBlc(iBlock, 2))';
+            RToverall_Blc_dtNum(SubIdx, iDt, iBlock) = mean(respRT_Col(find((trials_Col >= ttBlcIdx(1) & trials_Col <= ttBlcIdx(end)) & dtNum == dtrNums(iDt) & errorIdx_Col ~= 1 & fast_Col ~= 1)));
+        end
+    end
+
+    %% table for the lme test: RT, 
     lme_i = [];
     recency_nodes = zeros(nTrials, 1);
     for iT = 1 : nTrials
@@ -270,200 +302,205 @@ for SubIdx = 1 : subLen
     end
     is_BdNode = zeros(nTrials, 1); %% whether boundary nodes
     is_BdNode(find(from_nodes == 1 | from_nodes == 5 | from_nodes == 6 | from_nodes == 10 | from_nodes == 11 | from_nodes == 15)) = 1;
-    lme_i = [repmat(SubIdx, nTrials, 1), trials_Col, respRT_Col, from_nodes, to_nodes, dtNum, is_BdNode, recency_nodes, transStyle, rndHam_Col];
+    lme_i = [repmat(SubIdx, nTrials, 1), trials_Col, respRT_Col, from_nodes, to_nodes, dtNum, is_BdNode, recency_nodes, transStyle, rndHam_Col, lureIn];
     lme_i = lme_i(corrIdx, :);
     lme_i(:, 2) = log(lme_i(:, 2)); %% log(trial)
     lme_subj = [lme_subj; lme_i];
 end
 
 %% color settings
-colorSet = [249, 183, 176; ...
-            138, 170, 51; ...
-            84, 185, 211; ...
+colorSet = [249, 183, 176; ... % red 
+            84, 185, 211; ...  % blue
+            138, 170, 51; ...  % green
             248, 218, 172; ...
             184, 204, 225; ...
             210, 234, 200; ...
             198, 127, 192; ...
             219, 204, 226] ./ [255, 255, 255];
-colorSubj = hsv(subLen); 
-
-%% Learning effect: ratio of error or timeout trials / too fast ratio
-[erAvg, erSem] = Mean_and_Se(fastRatio, 1);
-%%% (1) plot the predicted response (or full bonus=100) across the 7 blocks
-LineSty = '-';
-% for SubIdx = 1 : subLen
-%     subTit = subjLab{SubIdx};
-%     figure('Position', [100 100 400 300]), clf;
-%     plot(1 : 1 : nBlock, fastRatio(SubIdx, :), 'Marker', '.', 'MarkerSize', 40, 'Color', [0.4, 0.4, 0.4], 'LineStyle', LineSty, 'LineWidth', 4); hold on;
-%     set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-%     set(gca, 'XTick', 1 : 1 : nBlock, 'XTickLabel', '');
-%     xlim([1, nBlock]);
-%     box off;
-%     title(subTit, 'FontSize', 20);
-% end
-figure('Position', [100 100 400 300]), clf;
-errorbar(1 : 1 : nBlock, erAvg, erSem, 'Color', 'k', 'LineStyle', '-', 'LineWidth', 4); hold on;
-%plot(1 : 1 : nBlock, prAvg, 'Marker', '.', 'MarkerSize', 40, 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', 4); hold on;
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', 1 : 1 : nBlock, 'XTickLabel', 1 : 1 : nBlock);
-xlim([1, nBlock]);
-box off;
-xlabel('Blocks', 'FontSize', 20);
-ylabel('Fast ratio', 'FontSize', 20);
+redGrad  = [189, 0, 38; ...
+            240, 59, 32; ...
+            253, 141, 60; ...
+            154, 178, 76; ...
+            254, 217, 118; ...
+            255, 255, 178] ./ 255;
+blueGrad = [8, 81, 156; ...
+            49, 130, 189; ...
+            107, 174, 214; ...
+            158, 202, 225; ...
+            198, 219, 239; ...
+            239, 243, 255] ./ 255;
+greeGrad = [0, 104, 55; ...
+            49, 163, 84; ...
+            120, 198, 121; ...
+            173, 221, 142; ...
+            217, 240, 163; ...
+            255, 255, 204] ./ 255;
 
 
-%% Learning effect (individual participant): the correct response time decreases with the trials
-nBins = nTrials / HamInter;
-for SubIdx = 1 : subLen
-    subTit = subjLab{SubIdx};
-    RT_i   = RTsubj(:, SubIdx);
-    RT_bins = zeros(nBins, 1);
-    for iB = 1 : nBins
-        iB_id = (iB - 1) * HamInter + 1 : iB * HamInter;
-        RT_bins(iB) = nanmean(RT_i(iB_id));
-    end
-    figure('Position', [100 100 400 300]), clf;
-    %plot(1 : length(RT_i), RT_i, 'Marker', '.', 'MarkerSize', 10, 'Color', [0.4, 0.4, 0.4], 'LineStyle', 'none'); hold on;
-    plot(1 : 1 : nBins, RT_bins, 'Marker', '.', 'MarkerSize', 20, 'Color', [0.4, 0.4, 0.4], 'LineStyle', '-', 'LineWidth', 3); hold on;
-    set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-    set(gca, 'XTick', 0 : 10 : nBins, 'XTickLabel', '');
-    ylim([0.5, 2.5]);
-    box off;
-    xlabel('Trials', 'FontSize', 20);
-    ylabel('Correct RTs (s)', 'FontSize', 20);
-    title(subTit, 'FontSize', 20);
+%% SI figure, RT Learning effect: within- and between-trans in Random and Hamiltonian Walk
+% RTtransTp_type_Blc  = cell(1, 2); % random vs. hamiltonian walks
+% RTtransTp_type_Blc{1} = (subLen, transType, nBlock)
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 6;
 end
-
-%% Learning effect: the predicted response ratio increases with the blocks
-[prAvg, prSem] = Mean_and_Se(predRatio, 1);
-%%% (1) plot the predicted response (or full bonus=100) across the 7 blocks
-figure('Position', [100 100 1500 800]), clf;
+figure('Position', [100 100 260 120]), clf;
 hold on;
-if isequal(ExpWord, 'cue')
-    ha = tight_subplot(4, 6, [.05 .05], [.1 .05], [.05 .05]); %% [ha, pos] = tight_subplot(Nh, Nw, gap, marg_h, marg_w)
-elseif isequal(ExpWord, 'explicit')
-    ha = tight_subplot(4, 6, [.05 .05], [.1 .05], [.05 .05]); %% [ha, pos] = tight_subplot(Nh, Nw, gap, marg_h, marg_w)
-elseif isequal(ExpWord, 'cueRand')
-    ha = tight_subplot(4, 6, [.05 .05], [.1 .05], [.05 .05]); 
-elseif isequal(ExpWord, 'cueEyeTrack')
-    ha = tight_subplot(3, 6, [.05 .05], [.1 .05], [.05 .05]);
+nWalks = 2; % Random and Hamiltonian Walk
+nTrans = 2; % within and Between-cluster transition
+for i_rOh = 1 : nWalks
+    RTtrans_iWs = RTtransTp_type_Blc{i_rOh};
+    for iTs = 1 : nTrans
+        RTtrans_iWs_iTs = squeeze(RTtrans_iWs(:, iTs, :));
+        [RTsAvg, RTsSem] = Mean_and_Se(RTtrans_iWs_iTs, 1);
+        if i_rOh == 1
+            colorTmp = colorSet(iTs, :);
+        elseif i_rOh == 2
+            colorTmp = 0.5 * colorSet(iTs, :) + 0.5 * [1, 1, 1];
+        end
+        errorbar(1 : 1 : nBlock, RTsAvg, RTsSem, 'Color', colorTmp, 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for iBlc = 1 : nBlock
+            plot(iBlc, RTsAvg(iBlc), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+        end
+    end
 end
-
-ha_i = 1;
-LineSty = '-';
-for SubIdx = 1 : subLen
-    subTit = subjLab{SubIdx};
-    %figure('Position', [100 100 400 300]), clf;
-    axes(ha(ha_i));
-    plot(1 : 1 : nBlock, predRatio(SubIdx, :), 'Marker', '.', 'MarkerSize', 40, 'Color', [0.4, 0.4, 0.4], 'LineStyle', LineSty, 'LineWidth', 4); hold on;
-    set(gca, 'FontSize', 16, 'FontWeight', 'Bold', 'LineWidth', 2);
+ylim([1, 1.6]);
+xlim([0.5, nBlock+0.5]);
+if figKey == 0
+    % ------For presentation------
+    set(gca, 'LineWidth', 2);
+    set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'XTick', 1 : 1 : nBlock, 'XTickLabel', 1 : 1 : nBlock);
+    set(gca, 'YTick', [1, 1.3, 1.6], 'YTickLabel', [1, 1.3, 1.6]); 
+elseif figKey == 1
+    % ------For Adobe Illustrator------
+    set(gca, 'LineWidth', 0.8);
+    set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
     set(gca, 'XTick', 1 : 1 : nBlock, 'XTickLabel', '');
-    xlim([1, nBlock]);
-    box off;
-    title(subTit, 'FontSize', 16);
-    axis('square');
-    ha_i = ha_i + 1;
+    set(gca, 'YTick', [1, 1.3, 1.6], 'YTickLabel', {'', '', ''}); 
 end
-%%% *************plotting the average across subjects
-figure('Position', [100 100 400 300]), clf;
-errorbar(1 : 1 : nBlock, prAvg, prSem, 'Color', 'k', 'LineStyle', '-', 'LineWidth', 4); hold on;
-%plot(1 : 1 : nBlock, prAvg, 'Marker', '.', 'MarkerSize', 40, 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', 4); hold on;
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', 1 : 1 : nBlock, 'XTickLabel', 1 : 1 : nBlock);
-xlim([1, nBlock]);
 box off;
-axis('square');
-xlabel('Blocks', 'FontSize', 20);
-ylabel('Prediction ratio', 'FontSize', 20);
-%%
-figure('Position', [100 100 400 300]), clf;
-errorbar(1 : 1 : nBlock, prAvg, prSem, 'Color', 'k', 'LineStyle', '-', 'LineWidth', 4); hold on;
-%plot(1 : 1 : nBlock, prAvg, 'Marker', '.', 'MarkerSize', 40, 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', 4); hold on;
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', 1 : 1 : nBlock, 'XTickLabel', 1 : 1 : nBlock);
-xlim([1, nBlock]);
-box off;
-%axis('square');
-% xlabel('Blocks', 'FontSize', 20);
-% ylabel('Prediction ratio', 'FontSize', 20);
 
-
-
-%% Learning effect: cross-cluster RT vs. within-cluster RT
-% (1) random + hamiltonian
-[RTavg_all, RTsem_all] = Mean_and_Se(RTtransTp, 1);
-figure('Position', [100 100 300 200]), clf;
-for iB = 1 : 2
-    b = bar(iB, RTavg_all(iB), 0.45, 'LineStyle', '-', 'LineWidth', 2); hold on;
-    b.FaceColor = colorSet(iB, :);
-    errorbar(iB, RTavg_all(iB), RTsem_all(iB), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', 2); hold on;
+%% SI figure, RT Learning effect: different distractor numbers
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 6;
 end
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', '', 'XTickLabel', '');
-xlim([1-0.5, 2+0.5]);
-box off;
-[h, p, ci, stats] = ttest(RTtransTp(:, 2), RTtransTp(:, 1))
-%%% the difference
-figure('Position', [100 100 150 200]), clf;
-[RTavg_allDif, RTsem_allDif] = Mean_and_Se(RTtransTp(:, 2) - RTtransTp(:, 1), 1);
-b = bar(1, RTavg_allDif, 0.45, 'LineStyle', '-', 'LineWidth', 2); hold on;
-b.FaceColor = colorSet(iB + 1, :);
-errorbar(1, RTavg_allDif, RTsem_allDif, 'Color', 'k', 'LineStyle', 'none', 'LineWidth', 2); hold on;
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', '', 'XTickLabel', '');
-xlim([1-0.5, 1+0.5]);
+figure('Position', [100 100 260 120]), clf;
+hold on;
+LineStys = {'-', '-.', ':'};
+for iDt = 1 : length(dtrNums) % RToverall_Blc_dtNum = zeros(subLen, 3, nBlock); % 3 distractor conditions
+    RTtrans_iDt = squeeze(RToverall_Blc_dtNum(:, iDt, :));
+    [RTsAvg, RTsSem] = Mean_and_Se(RTtrans_iDt, 1);
+    errorbar(1 : 1 : nBlock, RTsAvg, RTsSem, 'Color', blueGrad(iDt, :), 'LineStyle', LineStys{iDt}, 'LineWidth', errLineWid); hold on;
+    for iBlc = 1 : nBlock
+        plot(iBlc, RTsAvg(iBlc), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', blueGrad(iDt, :), 'LineStyle', '-'); hold on;
+    end
+end
+xlim([0.5, nBlock+0.5]);
+ylim([0.9, 1.6]);
+if figKey == 0
+    % ------For presentation------
+    set(gca, 'LineWidth', 2);
+    set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'XTick', 1 : 1 : nBlock, 'XTickLabel', 1 : 1 : nBlock);
+    set(gca, 'YTick', [1, 1.3, 1.6], 'YTickLabel', [1, 1.3, 1.6]); 
+elseif figKey == 1
+    % ------For Adobe Illustrator------
+    set(gca, 'LineWidth', 0.8);
+    set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'XTick', 1 : 1 : nBlock, 'XTickLabel', '');
+    set(gca, 'YTick', [0.9, 1, 1.3, 1.6], 'YTickLabel', {'', '', '', ''}); 
+end
 box off;
 
-%% (2) random & (3) hamiltonian
-colorSets = [0.98, 0.72, 0.69; ...
-    0.97, 0.85, 0.67; ...
-    0.33, 0.73, 0.83; ...
-    0.72, 0.80, 0.88; ...
-    0.54, 0.67, 0.20; ...
-    0.82, 0.92, 0.78; ...
-    0.78, 0.50, 0.75; ...
-    0.86, 0.80, 0.89; ...
-    0.75, 0.56, 0; ...
-    0.40, 0.40, 0.40];
-colorExp = colorSets([1, 3, 5], :);
-iExp = 1;
-colorTmp = colorExp(iExp, :);
+%% BehavioralPaper, Figure xx: overall RTs for within vs. between transitions in Random and Hamiltonian Walk
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+figure('Position', [100 100 260 120]), clf;
 
+% RTtransTp_type = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
 [RTavg_rOh, RTsem_rOh] = Mean_and_Se(RTtransTp_type, 1);
 RTavg_rOh = squeeze(RTavg_rOh);
-RTsem_rOh = squeeze(RTsem_rOh);% RTtransTp_type = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
-figure('Position', [100 100 280 180]), clf;
+RTsem_rOh = squeeze(RTsem_rOh);
 barPos = [1, 1.5; 1.7, 2.2];
-for iB = 1 : 2
-    barPos_i = barPos(iB, :);
-    if iB == 1     %% random walk
-        LineBar = '-';
-    elseif iB == 2 %% hamiltonian walk
-        LineBar = ':';
+for i_rOh = 1 : 2 % Random vs. Hamiltonian Walk
+    if i_rOh == 1
+        walkWord = 'Radom';
+    elseif i_rOh == 2
+        walkWord = 'Hamiltonian';
     end
+    barPos_i = barPos(i_rOh, :);
     %%% line plot
-    plot(barPos_i, RTtransTp_type(:, :, iB), '.-', 'LineWidth', 2, 'MarkerSize', 10, 'Color', [0.6, 0.6, 0.6]); hold on; % individuals
-    plot(barPos_i, RTavg_rOh(:, iB), 'Marker', '.', 'MarkerSize', 10, 'Color', colorTmp, 'LineStyle', 'none'); hold on;
-    errorbar(barPos_i(1), RTavg_rOh(1, iB), RTsem_rOh(1, iB), 'Color', colorTmp, 'Marker', '.', 'LineStyle', '-', 'LineWidth', 4, 'MarkerSize', 10);
-    errorbar(barPos_i(2), RTavg_rOh(2, iB), RTsem_rOh(2, iB), 'Color', colorTmp, 'Marker', '.', 'LineStyle', '-', 'LineWidth', 4, 'MarkerSize', 10);
-%     for i_rOh = 1 : 2
-%         %%% bar plot
-%         b = bar(barPos_i(i_rOh), RTavg_rOh(i_rOh, iB), 0.45, 'LineStyle', LineBar, 'LineWidth', 2); hold on;
-%         b.FaceColor = colorSet(i_rOh, :);
-%         errorbar(barPos_i(i_rOh), RTavg_rOh(i_rOh, iB), RTsem_rOh(i_rOh, iB), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', 2); hold on;
-%     end
+    plot(barPos_i, RTtransTp_type(:, :, i_rOh), 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', indvLineW); hold on;
+    plot(barPos_i, RTavg_rOh(:, i_rOh), 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+    for i_tp = 1 : 2 % within vs. between-transition
+        if i_rOh == 1
+            colorTmp = colorSet(i_tp, :);
+        elseif i_rOh == 2
+            colorTmp = 0.5 * colorSet(i_tp, :) + 0.5 * [1, 1, 1];
+        end
+        errorbar(barPos_i(i_tp), RTavg_rOh(i_tp, i_rOh), RTsem_rOh(i_tp, i_rOh), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+        plot(barPos_i(i_tp), RTavg_rOh(i_tp, i_rOh), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+    end
+    % ------ Statistical tests ------
+    disp(['======== ', walkWord, '-within vs. between trans ========']);
+    [h, p, ci, stats] = ttest(RTtransTp_type(:, 1, i_rOh), RTtransTp_type(:, 2, i_rOh))
 end
-set(gca, 'FontSize', 16, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', '', 'XTickLabel', '');
-xlim([0.9, barPos(end, end)+0.1]);
+xlim([0.6, 2.6]);
 ylim([0.5, 2]);
+if figKey == 0
+    % ------For presentation------
+    set(gca, 'LineWidth', 2);
+    set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'XTick', '', 'XTickLabel', '');
+    set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+elseif figKey == 1
+    % ------For Adobe Illustrator------
+    set(gca, 'LineWidth', 0.8);
+    set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+    set(gca, 'YTick', [0.5, 1, 1.5, 2], 'YTickLabel', '');
+end
 box off;
 
-%% the difference
+%% the difference: report in the manuscript
 [RTavg_rOhDif, RTsem_rOhDif] = Mean_and_Se(RTtransTp_type(:, 2, :) - RTtransTp_type(:, 1, :), 1);
 RTavg_rOhDif = squeeze(RTavg_rOhDif);
 RTsem_rOhDif = squeeze(RTsem_rOhDif);
-figure('Position', [100 100 300 200]), clf;
+figure('Position', [100 100 180 120]), clf;
 for iB = 1 : 2
     if iB == 1     %% random walk
         LineBar = '-';
@@ -478,10 +515,13 @@ set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
 set(gca, 'XTick', '', 'XTickLabel', '');
 xlim([1-0.5, 2+0.5]);
 box off;
+% ---------- Comparison between within vs. between-trans within a walk type ----------
+disp('---------- Random Walk: within vs. between-trans ----------');
 [h_r, p_r, ci_r, stats_r] = ttest(RTtransTp_type(:, 2, 1), RTtransTp_type(:, 1, 1))
+disp('---------- Hamiltonian Walk: within vs. between-trans ----------');
 [h_h, p_h, ci_h, stats_h] = ttest(RTtransTp_type(:, 2, 2), RTtransTp_type(:, 1, 2))
-%%% whether there is significant difference between random and hamiltonian
-%%% walk
+% ---------- whether there is significant difference between random and hamiltonian walk ----------
+disp('---------- Random vs. Hamiltonian Walk: Diff in between vs. within trans ----------');
 [h_rOh, p_rOh, ci_rOh, stats_rOh] = ttest(RTtransTp_type(:, 2, 2)-RTtransTp_type(:, 1, 2), RTtransTp_type(:, 2, 1)-RTtransTp_type(:, 1, 1))
 
 %% anova on RTs, with variables of random or hamiltonian, and within- or between-cluster transitions
@@ -502,135 +542,10 @@ RTtest = reshape(RTtransTp_type, [subLen, nTran * nWalk]);
 RTtest = reshape(RTtest', [subLen * nTran * nWalk, 1]);
 [p_RTs, tbl_RTs, stats_RTs] = anovan(RTtest, {ID, walkCol, transCol}, 'model', model, 'random', [1], 'sstype', 3, 'varnames', {'Subjects', 'WalksType', 'TransType'}); % 'model' as 'interaction' is completely the same as model1
 
-
-%% Accuracy in random vs. hamiltonian walks
-[accRatio_rOh, accRatio_tp] = ClusterRep_v2_predRatio(bhvDataDir, subj_listBv, subLen, errorIdx, fastIdx, trialTp, objTgt, objResp, nTrials, clsDef);
-%%% Figure 1&2: only trial types (random or hamiltonian) or transition types (within or between)
-%%% Figure 3: combinations of trial types & transition types
-for i = 1 : 2
-    if i == 1
-        accMat   = accRatio_rOh;
-        titWor   = 'Random or Hamiltonian: ';
-        colorTmp = [colorSet(4, :); colorSet(4, :)];
-        LineSty  = {'-', ':'};
-    elseif i == 2
-        accMat   = accRatio_tp;
-        titWor   = 'Within- or between-transition: ';
-        colorTmp = colorSet(1 : 2, :);
-        LineSty  = {'-', '-'};
-    end
-    [accAvg, accSem] = Mean_and_Se(accMat, 1); % accRatio_rOh = zeros(subLen, 2); %% correct response in random and hamiltonian walks
-    figure('Position', [100 100 300 200]), clf;
-    for iB = 1 : size(accAvg, 2)
-        b = bar(iB, accAvg(iB), 0.45, 'LineStyle', LineSty{iB}, 'LineWidth', 2); hold on;
-        b.FaceColor = colorTmp(iB, :);
-        errorbar(iB, accAvg(iB), accSem(iB), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', 2); hold on;
-    end
-    figureSet('', '', 0.5, size(accMat, 2) + 0.5);
-    disp(titWor);
-    [h, p, ci, stats] = ttest(accMat(:, 2), accMat(:, 1))
-
-end
-
-%% Accuracy in within- & between- transition, also random & hamiltonian walks
-[~, ~, accRatio_tp_rOh] = ClusterRep_v2_predRatio(bhvDataDir, subj_listBv, subLen, errorIdx, fastIdx, trialTp, objTgt, objResp, nTrials, clsDef);
-accMat   = accRatio_tp_rOh; %% accRatio_tp_rOh = zeros(subLen, 2, 2); %% the 1st and 2nd '2' denote ' within-cluster vs. between-cluster transition' and 'random & hamiltonian walks'
-titWor   = '2 walks & 2 transitions: ';
-colorTmp = colorSet(1 : 2, :);
-LineSty  = {'-', ':'; '-', ':'};
-[accAvg, accSem] = Mean_and_Se(accMat, 1);
-accAvg = squeeze(accAvg);
-accSem = squeeze(accSem);
-
-figure('Position', [100 100 400 200]), clf;
-barPos = [1, 1.5; 2.5, 3];
-for iB = 1 : 2
-    barPos_i = barPos(iB, :);
-    if iB == 1     %% random walk
-        LineBar = '-';
-    elseif iB == 2 %% hamiltonian walk
-        LineBar = ':';
-    end
-    for i_rOh = 1 : 2
-        b = bar(barPos_i(i_rOh), accAvg(i_rOh, iB), 0.45, 'LineStyle', LineBar, 'LineWidth', 2); hold on;
-        b.FaceColor = colorTmp(i_rOh, :);
-        errorbar(barPos_i(i_rOh), accAvg(i_rOh, iB), accSem(i_rOh, iB), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', 2); hold on;
-    end
-end
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', '', 'XTickLabel', '');
-xlim([0.5, barPos(end, end)+0.5]);
-box off;
-%%% the difference between random and hamiltonian walks separately for
-%%% within- and between-cluster transitions
-[accAvg_Dif, accSem_Dif] = Mean_and_Se(accRatio_tp_rOh(:, 2, :) - accRatio_tp_rOh(:, 1, :), 1);
-accAvg_Dif = squeeze(accAvg_Dif);
-accSem_Dif = squeeze(accSem_Dif);
-figure('Position', [100 100 300 200]), clf;
-for iB = 1 : 2
-    if iB == 1     %% random walk
-        LineBar = '-';
-    elseif iB == 2 %% hamiltonian walk
-        LineBar = ':';
-    end
-    b = bar(iB, accAvg_Dif(iB), 0.45, 'LineStyle', LineBar, 'LineWidth', 2); hold on;
-    b.FaceColor = colorSet(3, :);
-    errorbar(iB, accAvg_Dif(iB), accSem_Dif(iB), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', 2); hold on;
-end
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', '', 'XTickLabel', '');
-xlim([1-0.5, 2+0.5]);
-box off;
-[h_r, p_r, ci_r, stats_r] = ttest(accRatio_tp_rOh(:, 2, 1), accRatio_tp_rOh(:, 1, 1)) %% between- vs. within-cluster transitions in random walks
-[h_h, p_h, ci_h, stats_h] = ttest(accRatio_tp_rOh(:, 2, 2), accRatio_tp_rOh(:, 1, 2)) %% between- vs. within-cluster transitions in hamiltonian walks
-%%% whether there is significant difference between random and hamiltonian
-%%% walk
-[h_rOh, p_rOh, ci_rOh, stats_rOh] = ttest(accRatio_tp_rOh(:, 2, 2)-accRatio_tp_rOh(:, 1, 2), accRatio_tp_rOh(:, 2, 1)-accRatio_tp_rOh(:, 1, 1))
-
-
-%% anova on correct response ratios, with variables of random or hamiltonian, and within- or between-cluster transitions
-% accMat   = accRatio_tp_rOh; %% accRatio_tp_rOh = zeros(subLen, 2, 2); %% the 1st and 2nd '2' denote ' within-cluster vs. between-cluster transition' and 'random & hamiltonian walks'
-%%% repeated measurement ANOVA for corect response ratios
-%  2 (random vs. hamiltonian) by 2 (within- vs. between-cluster transitions) repeated-measures ANOVAs
-nWalk  = 2;
-nTran  = 2;
-ID     = reshape(repmat((1 : 1 : subLen), nWalk * nTran, 1), subLen * nWalk * nTran, 1);
-walkCol  = repmat((1 : 1 : nWalk)', subLen, nTran);
-walkCol  = reshape(walkCol', size(walkCol, 1)*size(walkCol, 2), 1);
-transCol = repmat([1; 2], subLen * nWalk, 1); 
-model = [1, 0, 0;... % main effect: subject
-         0, 1, 0;... % main effect: walks
-         0, 0, 1; ...% main effect: transitions
-         0, 1, 1]; 
-RTtest = reshape(accRatio_tp_rOh, [subLen, nTran * nWalk]);
-RTtest = reshape(RTtest', [subLen * nTran * nWalk, 1]);
-[p_ratio, tbl_ratio, stats_ratio] = anovan(RTtest, {ID, walkCol, transCol}, 'model', model, 'random', [1], 'sstype', 3, 'varnames', {'Subjects', 'WalksType', 'TransType'}); % 'model' as 'interaction' is completely the same as model1
-
-%% correlation between accuracy and RTs across subjects
-% added by rxj @ 04/22/2021
-[accRatio_rOh, accRatio_tp, accRatio_tp_rOh] = ClusterRep_v2_predRatio(bhvDataDir, subj_listBv, subLen, errorIdx, fastIdx, trialTp, objTgt, objResp, nTrials, clsDef);
-% RTtransTp = zeros(subLen, 2);
-% RTtransTp_type = zeros(subLen, 2, 2);
-[r_tpW, p_tpW] = corr(RTtransTp(:, 1), accRatio_tp(:, 1))
-[r_tpB, p_tpB] = corr(RTtransTp(:, 2), accRatio_tp(:, 2))
-[r_tpBW, p_tpBW] = corr(RTtransTp(:, 2)-RTtransTp(:, 1), accRatio_tp(:, 2)-accRatio_tp(:, 1))
-figure('Position', [100 100 600 200]), clf;
-subplot(1, 2, 1);
-plot(RTtransTp(:, 1), accRatio_tp(:, 1), 'Marker', '.', 'MarkerSize', 18, 'Color', colorSet(1, :), 'MarkerFaceColor', colorSet(1, :), 'LineStyle', 'none'); hold on;
-plot(RTtransTp(:, 2), accRatio_tp(:, 2), 'Marker', '.', 'MarkerSize', 18, 'Color', colorSet(2, :), 'MarkerFaceColor', colorSet(2, :), 'LineStyle', 'none'); hold on;
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-%set(gca, 'XTick', '', 'XTickLabel', '');
-box off;
-subplot(1, 2, 2);
-plot(RTtransTp(:, 2)-RTtransTp(:, 1), accRatio_tp(:, 2)-accRatio_tp(:, 1), 'Marker', '.', 'MarkerSize', 18, 'Color', colorSet(3, :), 'MarkerFaceColor', colorSet(3, :), 'LineStyle', 'none'); hold on;
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-%set(gca, 'XTick', '', 'XTickLabel', '');
-box off;
-
-
 %% with lure distractors vs. without
-%% which matrix
-flg = 3;
+% RTtransTp_lure      = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
+% RTtransTp_type_lure = zeros(subLen, 2, 2, 2); % the last 2 denotes 'random and hamiltonian' walk
+flg = 1;
 if flg == 1
     RTmat = RTtransTp_lure; %% mixture of random and hamiltonian path
 elseif flg == 2
@@ -638,38 +553,77 @@ elseif flg == 2
 elseif flg == 3
     RTmat = RTtransTp_type_lure(:, :, :, 2); %% only hamiltonian path
 end
-%% with lure distractors vs. without
+%% BehavioralPaper, Figure xx: influence of lure stimulus on RTs
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+figure('Position', [100 100 260 120]), clf;
+
 [RTavg_rOh, RTsem_rOh] = Mean_and_Se(RTmat, 1);
 RTavg_rOh = squeeze(RTavg_rOh);
-RTsem_rOh = squeeze(RTsem_rOh); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
-figure('Position', [100 100 400 200]), clf;
-barPos = [1, 1.5; 2.5, 3];
-for iB = 1 : 2
-    barPos_i = barPos(iB, :);
-    if iB == 1     %% random walk
-        LineBar = '-';
-    elseif iB == 2 %% hamiltonian walk
-        LineBar = ':';
+RTsem_rOh = squeeze(RTsem_rOh);
+barPos = [1, 1.5; 1.7, 2.2];
+for iTb = 1 : 2     % 'transition from boundary node to within node vs. from boundary to boundary'
+    if iTb == 1
+        transWord = 'boundary-to-within';
+    elseif iTb == 2
+        transWord = 'boundary-to-boundary';
     end
-    for i_rOh = 1 : 2
-        b = bar(barPos_i(i_rOh), RTavg_rOh(i_rOh, iB), 0.45, 'LineStyle', LineBar, 'LineWidth', 2); hold on;
-        b.FaceColor = colorSet(i_rOh, :);
-        errorbar(barPos_i(i_rOh), RTavg_rOh(i_rOh, iB), RTsem_rOh(i_rOh, iB), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', 2); hold on;
+    barPos_i = barPos(iTb, :);
+    %%% line plot
+    plot(barPos_i, RTmat(:, :, iTb), 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', indvLineW); hold on;
+    plot(barPos_i, RTavg_rOh(:, iTb), 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+    for ilr = 1 : 2 % 'lure distractor exists vs. none'
+        if ilr == 1
+            colorTmp = [0, 0, 0]; % with lure distractor
+        elseif ilr == 2
+            colorTmp = [1, 1, 1]; % without lure distractor
+        end
+        errorbar(barPos_i(ilr), RTavg_rOh(ilr, iTb), RTsem_rOh(ilr, iTb), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+        plot(barPos_i(ilr), RTavg_rOh(ilr, iTb), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
     end
+    % ------ Statistical tests ------
+    disp(['======== ', transWord, ': with vs. without lure stimulus ========']);
+    [h, p, ci, stats] = ttest(RTmat(:, 1, iTb), RTmat(:, 2, iTb))
 end
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', '', 'XTickLabel', '');
-xlim([0.5, barPos(end, end)+0.5]);
+xlim([0.6, 2.6]);
+ylim([0.5, 2]);
+if figKey == 0
+    % ------For presentation------
+    set(gca, 'LineWidth', 2);
+    set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'XTick', '', 'XTickLabel', '');
+    set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+elseif figKey == 1
+    % ------For Adobe Illustrator------
+    set(gca, 'LineWidth', 0.8);
+    set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+    set(gca, 'YTick', [0.5, 1, 1.5, 2], 'YTickLabel', '');
+end
 box off;
-%%% the difference
+
+
+%% Quantify the RT difference when the lure stimulus exists vs. not
 [RTavg_rOhDif, RTsem_rOhDif] = Mean_and_Se(RTmat(:, 2, :) - RTmat(:, 1, :), 1);
 RTavg_rOhDif = squeeze(RTavg_rOhDif);
 RTsem_rOhDif = squeeze(RTsem_rOhDif);
-figure('Position', [100 100 300 200]), clf;
+figure('Position', [100 100 180 120]), clf;
 for iB = 1 : 2
-    if iB == 1     %% random walk
+    if iB == 1     %% transition from boundary node to within node
         LineBar = '-';
-    elseif iB == 2 %% hamiltonian walk
+    elseif iB == 2 %% from boundary to boundary
         LineBar = ':';
     end
     b = bar(iB, RTavg_rOhDif(iB), 0.45, 'LineStyle', LineBar, 'LineWidth', 2); hold on;
@@ -680,29 +634,15 @@ set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
 set(gca, 'XTick', '', 'XTickLabel', '');
 xlim([1-0.5, 2+0.5]);
 box off;
+% ---------- Comparison between within vs. between-trans within a walk type ----------
+disp('---------- Boundary-to-within: with vs. without lure ----------');
 [h_r, p_r, ci_r, stats_r] = ttest(RTmat(:, 2, 1), RTmat(:, 1, 1))
+disp('---------- Boundary-to-boundary: with vs. without lure ----------');
 [h_h, p_h, ci_h, stats_h] = ttest(RTmat(:, 2, 2), RTmat(:, 1, 2))
-%%% whether there is significant difference between random and hamiltonian
-%%% walk
+% ---------- whether there is significant difference between random and hamiltonian walk ----------
+disp('---------- Boundary-to-within vs. boundar-to-boundary: Diff in with vs. without lure ----------');
 [h_rOh, p_rOh, ci_rOh, stats_rOh] = ttest(RTmat(:, 2, 2)-RTmat(:, 1, 2), RTmat(:, 2, 1)-RTmat(:, 1, 1))
 
-%%% single subjects
-figure('Position', [100 100 400 200]), clf;
-for SubIdx = 1 : subLen
-    for rOh = 1 : 2
-        xLab = (rOh - 1) * 2 + 1 : rOh * 2;
-        if rOh == 1
-            LineSty = '-';
-        elseif rOh == 2
-            LineSty = ':';
-        end
-        plot(xLab, RTmat(SubIdx, :, rOh), 'Marker', '.', 'MarkerSize', 40, 'Color', colorSet(rOh + 3, :), 'LineStyle', LineSty, 'LineWidth', 2); hold on;
-    end
-end
-set(gca, 'FontSize', 16, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', 1 : 1 : 4, 'XTickLabel', '');
-xlim([1-0.5, 4+0.5]);
-box off;
 
 %% Concatenating the respYes_trials across blocks for the subsequent use in Jupyter Lab
 % write by rxj @ 03/16/2021
@@ -719,38 +659,10 @@ for SubIdx = 1 : subLen
         mouseTraj_trials_blc = [mouseTraj_trials_blc; mouseTraj_trials];
         respYes_trials_blc   = [respYes_trials_blc; respYes_trials];
     end
-    save([subjDir, subjBv, 'mouseTraj_trials_blc.mat'], 'mouseTraj_trials_blc');
-    save([subjDir, subjBv, 'respYes_trials_blc.mat'], 'respYes_trials_blc');
+%     save([subjDir, subjBv, 'mouseTraj_trials_blc.mat'], 'mouseTraj_trials_blc');
+%     save([subjDir, subjBv, 'respYes_trials_blc.mat'], 'respYes_trials_blc');
 end
 
-%% Calculating the recency
-% write by rxj @ 04/13/2021
-recency_nodes_sub = zeros(nTrials, 2, subLen);
-for SubIdx = 1 : subLen
-    subjBv      = subj_listBv{SubIdx};
-    subTit      = subjLab{SubIdx};
-    subjDir     = [bhvDataDir, subjBv, '/'];
-    load([subjDir, subjBv, 'clusterResult_Blocks.mat'], 'clusterResult');
-    from_nodes = clusterResult(:, objTgt);
-
-    recency_nodes = zeros(nTrials, 2);
-    for iT = 1 : nTrials
-        rec_iT = find(from_nodes(iT) == from_nodes(1 : (iT - 1)));
-        if isempty(rec_iT)
-            recency_nodes(iT, 1) = nodeNum;
-            recency_nodes(iT, 2) = nodeNum;
-            
-        elseif ~isempty(rec_iT) && length(rec_iT) == 1
-            recency_nodes(iT, 1) = iT - rec_iT(end);
-            recency_nodes(iT, 2) = nodeNum;
-            
-        elseif ~isempty(rec_iT) && length(rec_iT) >= 2
-            recency_nodes(iT, 1) = iT - rec_iT(end);
-            recency_nodes(iT, 2) = iT - rec_iT(end - 1);
-        end
-    end
-    recency_nodes_sub(:, :, SubIdx) = recency_nodes;
-end
 
 
 
