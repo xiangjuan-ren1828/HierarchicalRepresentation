@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# MATLAB
+*.asv
+*.mat
+
+# Data
+data/raw/
+
+# OS
+.DS_Store
