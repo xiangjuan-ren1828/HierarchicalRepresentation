@@ -698,6 +698,20 @@ elseif figKey == 1
 end
 nWalks = 2; % Random and Hamiltonian Walk
 nTrans = 2; % within and Between-cluster transition
+% ------ statistical tests for each bin ------
+statsMat_trans_exp = nan(nTrans, BinL, 2, length(expList)); % 2: p and tstats
+ref_trans = (1/2+1/3+1/4)/3;
+for iExp = 1 : length(expList)
+    for iTs = 1 : nTrans % within- vs. between-trans
+        for iB = 1 : BinL
+            angAcc_iB = squeeze(angAcc_trans_ln_exp(:, iB, iTs, iExp));
+            % one-sample test
+            [h, p, ci, stats] = ttest(angAcc_iB, ref_trans, 'Tail', 'right');
+            statsMat_trans_exp(iTs, iB, 1, iExp) = p;
+            statsMat_trans_exp(iTs, iB, 2, iExp) = stats.tstat;
+        end
+    end
+end
 for iExp = 1 : length(expList)
     figure('Position', [100 100 260 160]), clf;
     hold on;
@@ -710,8 +724,15 @@ for iExp = 1 : length(expList)
         [accAvg, accSem] = Mean_and_Se(angAcc_ii, 1);
         colorTmp = colorSet(iTs, :);
         errorbar(1 : 1 : BinL, accAvg, accSem, 'Color', colorTmp, 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+
+        [~, ~, ~, adj_p] = fdr_bh(squeeze(statsMat_trans_exp(iTs, :, 1, iExp)), 0.05, 'pdep'); % method: 'dep', 'pdep'
         for iB = 1 : BinL
-            plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+            if adj_p(iB) < 0.05
+                markFace = colorTmp;
+            else
+                markFace = [1, 1, 1];
+            end
+            plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', markFace, 'LineStyle', '-'); hold on;
         end
     end
     xlim([0.5, BinL+0.5]);
