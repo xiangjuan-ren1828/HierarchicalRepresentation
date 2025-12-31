@@ -405,20 +405,56 @@ for iExp = 1 : length(expList)
         %% learning effect: accuracy in sliding bins at all sampling time points
         % ------ all trials together ------
         % angAcc_ln_exp            = nan(subLen, BinL, length(expList));
-        % ------ different distractor numbers ------ 
-        % angAcc_ln_dtr_exp        = nan(subLen, BinL, 3, length(expList));
-        % ------ within- vs. between-trans ------ 
-        % angAcc_trans_ln_exp      = nan(subLen, BinL, 2, length(expList));    % 2: within- vs. between transition
-        % ------ within- vs. between-trans for Random and Hamiltonian Walk ------ 
-        % angAcc_trans_walk_ln_exp = nan(subLen, BinL, 2, 2, length(expList)); % first 2: within- vs. between transition; 2nd 2: random vs. hamiltonian walk
-
         for iB = 1 : BinL
             trlIdx = (iB - 1) * nBin + 1 : iB * nBin;
-            choiceId_trl = choiceId_trials(trlIdx);
+            choiceId_trl = choiceId_ang(trlIdx);
             choiceId_trl(isnan(choiceId_trl)) = [];
-            angAcc_tp_ln(iSub, iB)      = length(find(choiceId_trl == 1)) / length(choiceId_trl);
+            angAcc_ln_exp(iSub, iB, iExp)     = length(find(choiceId_trl == 1)) / length(choiceId_trl);
+        end
+        % ------ different distractor numbers ------ 
+        % angAcc_ln_dtr_exp = nan(subLen, BinL, 3, length(expList));
+        for iB = 1 : BinL
+            trlIdx       = (iB - 1) * nBin + 1 : iB * nBin;
+            choiceId_trl = choiceId_ang(trlIdx);
+            dtrNoCnt_trl = dtrNoCnt_iSub(trlIdx);
+            dtrNoCnt_trl(isnan(choiceId_trl)) = [];
+            choiceId_trl(isnan(choiceId_trl)) = [];
+            for iDtr = 1 : 3
+                angAcc_ln_dtr_exp(iSub, iB, iDtr, iExp) = length(find(choiceId_trl == 1 & dtrNoCnt_trl == iDtr)) / length(find(dtrNoCnt_trl == iDtr));
+            end
         end
 
+        % ------ within- vs. between-trans ------ 
+        % angAcc_trans_ln_exp = nan(subLen, BinL, 2, length(expList));    % 2: within- vs. between transition
+        for iB = 1 : BinL
+            trlIdx         = (iB - 1) * nBin + 1 : iB * nBin;
+            choiceId_trl   = choiceId_ang(trlIdx);
+            transStyle_trl = transStyle(trlIdx);
+            transStyle_trl(isnan(choiceId_trl)) = [];
+            choiceId_trl(isnan(choiceId_trl)) = [];
+            % ------ within-trans ------
+            angAcc_trans_ln_exp(iSub, iB, 1, iExp) = length(find(choiceId_trl == 1 & transStyle_trl == 1)) / length(find(transStyle_trl == 1)); 
+            % ------ between-trans------
+            angAcc_trans_ln_exp(iSub, iB, 2, iExp) = length(find(choiceId_trl == 1 & transStyle_trl == 0)) / length(find(transStyle_trl == 0)); 
+        end
+
+        % ------ within- vs. between-trans for Random and Hamiltonian Walk ------ 
+        % angAcc_trans_walk_ln_exp = nan(subLen, BinL, 2, 2, length(expList)); % first 2: within- vs. between transition; 2nd 2: random vs. hamiltonian walk
+        for iB = 1 : BinL
+            trlIdx         = (iB - 1) * nBin + 1 : iB * nBin;
+            choiceId_trl   = choiceId_ang(trlIdx);
+            transStyle_trl = transStyle(trlIdx);
+            rndHam_Col_trl = rndHam_Col(trlIdx);
+            transStyle_trl(isnan(choiceId_trl)) = [];
+            rndHam_Col_trl(isnan(choiceId_trl)) = [];
+            choiceId_trl(isnan(choiceId_trl))   = [];
+            angAcc_trans_walk_ln_exp(iSub, iB, 1, 1, iExp) = length(find(choiceId_trl == 1 & transStyle_trl == 1 & rndHam_Col_trl == 1)) / length(find(transStyle_trl == 1 & rndHam_Col_trl == 1)); %% within & Random-walk
+            angAcc_trans_walk_ln_exp(iSub, iB, 2, 1, iExp) = length(find(choiceId_trl == 1 & transStyle_trl == 0 & rndHam_Col_trl == 1)) / length(find(transStyle_trl == 0 & rndHam_Col_trl == 1)); %% between & Random-walk
+            angAcc_trans_walk_ln_exp(iSub, iB, 1, 2, iExp) = length(find(choiceId_trl == 1 & transStyle_trl == 1 & rndHam_Col_trl == 2)) / length(find(transStyle_trl == 1 & rndHam_Col_trl == 2)); %% within & Hamiltonian-walk
+            angAcc_trans_walk_ln_exp(iSub, iB, 2, 2, iExp) = length(find(choiceId_trl == 1 & transStyle_trl == 0 & rndHam_Col_trl == 2)) / length(find(transStyle_trl == 0 & rndHam_Col_trl == 2)); %% between & Hamiltonian-walk
+        end
+
+        %% trajectory or choice accuracy within a trial when tested with lure vs. without lure
 
 
         %% accuracy of within- and between-transitions for Random and Hamiltonian Walk trials
@@ -533,7 +569,7 @@ for iExp = 1 : length(expList)
     end
 end
 
-%% plotting the accuracy time curves
+%% SI figure: plotting the accuracy time curves
 % angAcc_exp = zeros(subLen, length(circle_list), nExp); %% accuracy in each time point
 LineSty  = '-';
 colorTmp = colorSet(7, :);
@@ -573,9 +609,55 @@ for iExp = 1 : length(expList)
 end
 
 %% SI figure: learning curve for different distractors across trial bins (100 trials/bin)
-
-
-
+% angAcc_ln_dtr_exp = nan(subLen, BinL, 3, length(expList));
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 6;
+end
+LineStys = {'-', '-.', ':'};
+for iExp = 1 : length(expList)
+    figure('Position', [100 100 260 160]), clf;
+    hold on;
+    xlim([0.5, BinL+0.5]);
+    ylim([0.2, 0.8]);
+    plot(xlim, [1/2, 1/2], 'Color', [0.6, 0.6, 0.6], 'LineStyle', LineStys{1}, 'LineWidth', 0.8); hold on;
+    plot(xlim, [1/3, 1/3], 'Color', [0.6, 0.6, 0.6], 'LineStyle', LineStys{2}, 'LineWidth', 0.8); hold on;
+    plot(xlim, [1/4, 1/4], 'Color', [0.6, 0.6, 0.6], 'LineStyle', LineStys{3}, 'LineWidth', 0.8); hold on;
+    for iDt = 1 : length(dtrNums) 
+        angAcc_iDt = squeeze(angAcc_ln_dtr_exp(:, :, iDt, iExp));
+        [accAvg, accSem] = Mean_and_Se(angAcc_iDt, 1);
+        errorbar(1 : 1 : BinL, accAvg, accSem, 'Color', blueGrad(iDt, :), 'LineStyle', LineStys{iDt}, 'LineWidth', errLineWid); hold on;
+        for iB = 1 : BinL
+            plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', blueGrad(iDt, :), 'LineStyle', '-'); hold on;
+        end
+    end
+    xlim([0.5, BinL+0.5]);
+    ylim([0.2, 0.8]);
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 1 : 1 : BinL, 'XTickLabel', 1 : 1 : BinL);
+        set(gca, 'YTick', 0.2 : 0.2 : 0.8, 'YTickLabel', 0.2 : 0.2 : 0.8);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 1 : 1 : BinL, 'XTickLabel', '');
+        set(gca, 'YTick', 0.2 : 0.2 : 0.8, 'YTickLabel', '');
+    end
+    box off;
+end
 
 %% BhevaiorPaper Figure xx: learning curve for within and between transitions across trial bins (100 trials/bin)
 
