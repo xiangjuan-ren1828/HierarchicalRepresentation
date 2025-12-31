@@ -80,7 +80,7 @@ miniDmat = modelRDM_minimalDist();
 circle_list = 0 : 1/60 : 1.5;
 states      = 15;
 nFit        = 100;
-expList     = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'}; % {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp', 'ImplicitClusterExp', 'ImplicitRandClusterExp'};
+expList     = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'}; 
 folder      = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 
 subLen = 24;
@@ -100,6 +100,15 @@ angAcc_dtr_Hami_exp = zeros(subLen, length(circle_list), 3, length(expList));
 acc_trans_walk      = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
 %%% trial proportions of within-cluster and between-cluster transition under Random and Hamiltonian Walk
 trlPro_trans_walk   = zeros(subLen, 2, 2, length(expList)); 
+%%% accuracy for boundary-to-within and boundary-to-boundary transitions
+%%% with versus without lure stimulus
+acc_trans_lure      = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
+acc_trans_traj_lure = zeros(subLen, length(circle_list), 2, 2, length(expList));
+% first 2:  with or without lure stimulus
+% second 2: boundary-to-within transition or bounary-to-boundary transition
+% third 3:  random or hamiltonian walk
+acc_trans_walk_lure      = zeros(subLen, 2, 2, 2, length(expList));
+acc_trans_walk_traj_lure = zeros(subLen, length(circle_list), 2, 2, 2, length(expList));
 for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
     %% Subject
@@ -143,15 +152,15 @@ for iExp = 1 : length(expList)
         angleDir = [bhvDataDir, 'angleCal/'];
         angleTraj_pd_subj = readtable([angleDir, 'angleTraj_pd_subj.csv']);
         %%% variables
-        subNo_col     = angleTraj_pd_subj.subNo;
-        trialCnt_col  = angleTraj_pd_subj.trialCnt;
-        blockNo_col   = angleTraj_pd_subj.blockNo;
-        trialNo_col   = angleTraj_pd_subj.trialNo;
-        tgtAng_col    = angleTraj_pd_subj.tgtAng;
-        dtrAng1_col   = angleTraj_pd_subj.dtrAng1;
-        dtrAng2_col   = angleTraj_pd_subj.dtrAng2;
-        dtrAng3_col   = angleTraj_pd_subj.dtrAng3;
-        dtrNoCnt_col  = angleTraj_pd_subj.dtrNoCnt; %% 1, 2, 3 
+        subNo_col    = angleTraj_pd_subj.subNo;
+        trialCnt_col = angleTraj_pd_subj.trialCnt;
+        blockNo_col  = angleTraj_pd_subj.blockNo;
+        trialNo_col  = angleTraj_pd_subj.trialNo;
+        tgtAng_col   = angleTraj_pd_subj.tgtAng;
+        dtrAng1_col  = angleTraj_pd_subj.dtrAng1;
+        dtrAng2_col  = angleTraj_pd_subj.dtrAng2;
+        dtrAng3_col  = angleTraj_pd_subj.dtrAng3;
+        dtrNoCnt_col = angleTraj_pd_subj.dtrNoCnt; %% 1, 2, 3 
     end
     subj_listBv = subj_list;
     subLen      = length(subj_list);
@@ -187,6 +196,7 @@ for iExp = 1 : length(expList)
         to_nodes   = clusterResult(:, objResp(1));
         dt_nodes   = clusterResult(:, objResp);
         transIn    = zeros(nTrials, 3);
+        lureIn     = zeros(nTrials, 1); % whether there are two items selected from the same cluster
         for ic = 1 : size(clsDef, 1)
             if ic == 1
                 clsIdx = find(from_nodes >= 1 & from_nodes <= 5);
@@ -198,8 +208,14 @@ for iExp = 1 : length(expList)
             transIn(clsIdx, 1) = arrayfun(@(x) ismember(x, clsDef(ic, :)), from_nodes(clsIdx));
             transIn(clsIdx, 2) = arrayfun(@(x) ismember(x, clsDef(ic, :)), to_nodes(clsIdx));
             transIn(clsIdx, 3) = repmat(ic, length(clsIdx), 1);
+            for i_cls = 1 : length(clsIdx)
+                lureFind = arrayfun(@(x) ismember(x, clsDef(ic, :)), dt_nodes(clsIdx(i_cls), 2 : end));
+                lureIn(clsIdx(i_cls), 1) = length(find(lureFind == 1));
+            end
         end
         transStyle = (transIn(:, 1) == transIn(:, 2));
+        nodesLabel = zeros(nTrials, 1);
+        nodesLabel(from_nodes == 1 | from_nodes == 5 | from_nodes == 6 | from_nodes == 10 | from_nodes == 11 | from_nodes == 15) = 1;
         
         %%% mouse trajectory trials
         load([subjDir, subjBv,  'respYes_trials_blc.mat'], 'respYes_trials_blc');
@@ -283,10 +299,10 @@ for iExp = 1 : length(expList)
         end
         %% merge all trials
         for iTp = 1 : length(circle_list)
-            choiceId_i = choiceId(:, iTp);
+            choiceId_i      = choiceId(:, iTp);
             dtrNoCnt_iSub_i = dtrNoCnt_iSub;
             dtrNoCnt_iSub_i(isnan(choiceId_i)) = [];
-            choiceId_i(isnan(choiceId_i))     = [];
+            choiceId_i(isnan(choiceId_i))      = [];
             angAcc(iSub, iTp)  = length(find(choiceId_i == 1)) / length(choiceId_i);
             lenData(iSub, iTp) = length(choiceId_i);
             
@@ -300,7 +316,7 @@ for iExp = 1 : length(expList)
         %% only for the Random trials
         used_Trl = 1 : rndTrial;
         for iTp = 1 : length(circle_list)
-            choiceId_i = choiceId(used_Trl, iTp);
+            choiceId_i      = choiceId(used_Trl, iTp);
             dtrNoCnt_iSub_i = dtrNoCnt_iSub(used_Trl);
             dtrNoCnt_iSub_i(isnan(choiceId_i)) = [];
             choiceId_i(isnan(choiceId_i))     = [];
@@ -315,7 +331,7 @@ for iExp = 1 : length(expList)
         %% only for the Hamiltonian trials
         used_Trl = 701 : nTrials;
         for iTp = 1 : length(circle_list)
-            choiceId_i = choiceId(used_Trl, iTp);
+            choiceId_i      = choiceId(used_Trl, iTp);
             dtrNoCnt_iSub_i = dtrNoCnt_iSub(used_Trl);
             dtrNoCnt_iSub_i(isnan(choiceId_i)) = [];
             choiceId_i(isnan(choiceId_i))     = [];
@@ -327,9 +343,58 @@ for iExp = 1 : length(expList)
             end
         end
 
+        %% trajectory when lure stimulus exists
+        % choiceId = nan(length(stim), length(circle_list));
+        for iTp = 1 : length(circle_list)
+            choiceId_i = choiceId(:, iTp);
+
+            transStyle_iTp = transStyle;
+            rndHam_Col_iTp = rndHam_Col;
+            nodesLabel_iTp = nodesLabel;
+            lureIn_iTp     = lureIn;
+            transStyle_iTp(isnan(choiceId_i)) = [];
+            rndHam_Col_iTp(isnan(choiceId_i)) = [];
+            nodesLabel_iTp(isnan(choiceId_i)) = [];
+            lureIn_iTp(isnan(choiceId_i))     = [];
+            choiceId_i(isnan(choiceId_i))     = [];
+
+            % -----------------------------------------------------------------------------------------
+            % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
+            % acc_trans_traj_lure = zeros(subLen, length(circle_list), 2, 2, length(expList));
+            acc_trans_traj_lure(iSub, iTp, 1, 1, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp == 1)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp == 1));
+            % ------ lure stimulus exists in boundary-to-boundary trans ------
+            acc_trans_traj_lure(iSub, iTp, 1, 2, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp ~= 1)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp ~= 1));
+            % ------ no lure stimulus in boundary-to-within trans ------
+            acc_trans_traj_lure(iSub, iTp, 2, 1, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp == 1)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp == 1));
+            % ------ no lure stimulus in boundary-to-boundary trans ------
+            acc_trans_traj_lure(iSub, iTp, 2, 2, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1));
+
+            % -----------------------------------------------------------------------------------------
+            % first 2:  with or without lure stimulus
+            % second 2: boundary-to-within transition or bounary-to-boundary transition
+            % third 3:  random or hamiltonian walk
+            % acc_trans_walk_traj_lure = zeros(subLen, length(circle_list), 2, 2, 2, length(expList));
+            % ------ lure stimulus exists ------
+            % boundary-to-within trans, Random walk
+            acc_trans_walk_traj_lure(iSub, iTp, 1, 1, 1, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp == 1 & rndHam_Col_iTp == 1)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp == 1 & rndHam_Col_iTp == 1));
+            % boundary-to-boundary trans, Random walk
+            acc_trans_walk_traj_lure(iSub, iTp, 1, 2, 1, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 1)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 1));
+            % boundary-to-within trans, Hamiltonian walk
+            acc_trans_walk_traj_lure(iSub, iTp, 1, 1, 2, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp == 1 & rndHam_Col_iTp == 2)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp == 1 & rndHam_Col_iTp == 2));
+            % boundary-to-boundary trans, Hamiltonian walk
+            acc_trans_walk_traj_lure(iSub, iTp, 1, 2, 2, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 2)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 1 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 2));
+            % ------ no lure stimulus ------
+            acc_trans_walk_traj_lure(iSub, iTp, 2, 1, 1, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp == 1 & rndHam_Col_iTp == 1)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp == 1 & rndHam_Col_iTp == 1));
+            acc_trans_walk_traj_lure(iSub, iTp, 2, 2, 1, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 1)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 1));
+            acc_trans_walk_traj_lure(iSub, iTp, 2, 1, 2, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp == 1 & rndHam_Col_iTp == 2)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp == 1 & rndHam_Col_iTp == 2));
+            acc_trans_walk_traj_lure(iSub, iTp, 2, 2, 2, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 2)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 2));
+        end
+
         %% accuracy of within- and between-transitions for Random and Hamiltonian Walk trials
         transStyle(isnan(choiceId_ang))   = [];
         rndHam_Col(isnan(choiceId_ang))   = [];
+        nodesLabel(isnan(choiceId_ang))   = [];
+        lureIn(isnan(choiceId_ang))       = [];
         choiceId_ang(isnan(choiceId_ang)) = [];
         acc_trans_walk(iSub, 1, 1, iExp) = length(find(choiceId_ang == 1 & transStyle == 1 & rndHam_Col == 1)) / length(find(transStyle == 1 & rndHam_Col == 1)); %% within & Random-walk
         acc_trans_walk(iSub, 2, 1, iExp) = length(find(choiceId_ang == 1 & transStyle == 0 & rndHam_Col == 1)) / length(find(transStyle == 0 & rndHam_Col == 1)); %% between & Random-walk
@@ -342,6 +407,36 @@ for iExp = 1 : length(expList)
         trlPro_trans_walk(iSub, 1, 2, iExp) = length(find(transStyle == 1 & rndHam_Col == 2)) / length(choiceId_ang);
         trlPro_trans_walk(iSub, 2, 2, iExp) = length(find(transStyle == 0 & rndHam_Col == 2)) / length(choiceId_ang);
 
+        %% accuracy when lure stimulus exists
+        % acc_trans_lure = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
+        % ------ lure stimulus exists in boundary-to-within trans ------ 
+        acc_trans_lure(iSub, 1, 1, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 1 & transStyle == 1)) / length(find(nodesLabel == 1 & lureIn == 1 & transStyle == 1));
+        % ------ lure stimulus exists in boundary-to-boundary trans ------ 
+        acc_trans_lure(iSub, 1, 2, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 1 & transStyle ~= 1)) / length(find(nodesLabel == 1 & lureIn == 1 & transStyle ~= 1));
+        % ------ no lure stimulus in boundary-to-within trans ------ 
+        acc_trans_lure(iSub, 2, 1, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 0 & transStyle == 1)) / length(find(nodesLabel == 1 & lureIn == 0 & transStyle == 1));
+        % ------ no lure stimulus in boundary-to-boundary trans ------ 
+        acc_trans_lure(iSub, 2, 2, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 0 & transStyle ~= 1)) / length(find(nodesLabel == 1 & lureIn == 0 & transStyle ~= 1));
+
+        % first 2:  with or without lure stimulus
+        % second 2: boundary-to-within transition or bounary-to-boundary transition
+        % third 3:  random or hamiltonian walk
+        % acc_trans_walk_lure = zeros(subLen, 2, 2, 2, length(expList));
+        % ------ lure stimulus exists ------
+        % boundary-to-within trans, Random walk
+        acc_trans_walk_lure(iSub, 1, 1, 1, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 1 & transStyle == 1 & rndHam_Col == 1)) / length(find(nodesLabel == 1 & lureIn == 1 & transStyle == 1 & rndHam_Col == 1));
+        % boundary-to-boundary trans, Random walk
+        acc_trans_walk_lure(iSub, 1, 2, 1, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 1 & transStyle ~= 1 & rndHam_Col == 1)) / length(find(nodesLabel == 1 & lureIn == 1 & transStyle ~= 1 & rndHam_Col == 1));
+        % boundary-to-within trans, Hamiltonian walk
+        acc_trans_walk_lure(iSub, 1, 1, 2, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 1 & transStyle == 1 & rndHam_Col == 2)) / length(find(nodesLabel == 1 & lureIn == 1 & transStyle == 1 & rndHam_Col == 2));
+        % boundary-to-boundary trans, Hamiltonian walk
+        acc_trans_walk_lure(iSub, 1, 2, 2, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 1 & transStyle ~= 1 & rndHam_Col == 2)) / length(find(nodesLabel == 1 & lureIn == 1 & transStyle ~= 1 & rndHam_Col == 2));
+        % ------ no lure stimulus ------
+        acc_trans_walk_lure(iSub, 2, 1, 1, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 0 & transStyle == 1 & rndHam_Col == 1)) / length(find(nodesLabel == 1 & lureIn == 0 & transStyle == 1 & rndHam_Col == 1));
+        acc_trans_walk_lure(iSub, 2, 2, 1, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 0 & transStyle ~= 1 & rndHam_Col == 1)) / length(find(nodesLabel == 1 & lureIn == 0 & transStyle ~= 1 & rndHam_Col == 1));
+        acc_trans_walk_lure(iSub, 2, 1, 2, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 0 & transStyle == 1 & rndHam_Col == 2)) / length(find(nodesLabel == 1 & lureIn == 0 & transStyle == 1 & rndHam_Col == 2));
+        acc_trans_walk_lure(iSub, 2, 2, 2, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 0 & transStyle ~= 1 & rndHam_Col == 2)) / length(find(nodesLabel == 1 & lureIn == 0 & transStyle ~= 1 & rndHam_Col == 2));
+
         %% save data for the subsequent GLMM analysis
         % added by rxj @ 02/22/2024
         % data saved: choice (1-correct, 0-incorrect), trialNo, walkTypes,
@@ -350,16 +445,16 @@ for iExp = 1 : length(expList)
 
     end
     %%% merge all trials
-    angAcc_exp(1 : subLen, :, iExp)  = angAcc;
-    lenData_exp(1 : subLen, :, iExp) = lenData;
-    angAcc_dtr_exp(1 : subLen, :, :, iExp) = angAcc_dtr;
+    angAcc_exp(1 : subLen, :, iExp)             = angAcc;
+    lenData_exp(1 : subLen, :, iExp)            = lenData;
+    angAcc_dtr_exp(1 : subLen, :, :, iExp)      = angAcc_dtr;
     %%% only for the Random trials
-    angAcc_Rand_exp(1 : subLen, :, iExp)  = angAcc_Rand;
-    lenData_Rand_exp(1 : subLen, :, iExp) = lenData_Rand;
+    angAcc_Rand_exp(1 : subLen, :, iExp)        = angAcc_Rand;
+    lenData_Rand_exp(1 : subLen, :, iExp)       = lenData_Rand;
     angAcc_dtr_Rand_exp(1 : subLen, :, :, iExp) = angAcc_dtr_Rand;
     %%% only for the Hamiltonian trials
-    angAcc_Hami_exp(1 : subLen, :, iExp)  = angAcc_Hami;
-    lenData_Hami_exp(1 : subLen, :, iExp) = lenData_Hami;
+    angAcc_Hami_exp(1 : subLen, :, iExp)        = angAcc_Hami;
+    lenData_Hami_exp(1 : subLen, :, iExp)       = lenData_Hami;
     angAcc_dtr_Hami_exp(1 : subLen, :, :, iExp) = angAcc_dtr_Hami;
 
 end
@@ -377,13 +472,13 @@ colorSets = [0.98, 0.72, 0.69; ...
             0.40, 0.40, 0.40];
 colorComp = colorSets([1, 3, 5], :);
 
-%% -------------Part 1: merge all trials with different distractors-------------
+%% -------------SI figure: time curve by merging all trials with different distractors-------------
 %% statistical testing in each time point
 stat_mat = zeros(length(circle_list), 2, length(expList)); % 3 means three experiments
 for iExp = 1 : length(expList)
     for iTime = 1 : length(circle_list)
         angAcc_exp_i = angAcc_exp(:, iTime, iExp);
-        [h, p, ci, stats] = ttest(angAcc_exp_i, (1/2+1/3+1/4)/3, 'Tail', 'right');
+        [h, p, ci, stats] = ttest(angAcc_exp_i, (1/2+1/3+1/4)/3, 'Tail', 'both');
         
         stat_mat(iTime, 1, iExp) = p;
         stat_mat(iTime, 2, iExp) = stats.tstat;
@@ -391,282 +486,55 @@ for iExp = 1 : length(expList)
 end
 
 %% plotting the accuracy time curves
-% angAcc  = zeros(subLen, length(circle_list));
-figure('Position', [100 100 1000 300]), clf;
-ha = tight_subplot(1, length(expList), [.05 .05], [.1 .02], [.05 .05]);
-ha_i = 1;
+% angAcc_exp = zeros(subLen, length(circle_list), nExp); %% accuracy in each time point
+LineSty = '-';
 for iExp = 1 : length(expList)
-    angAcc_exp_i  = angAcc_exp(:, :, iExp);
-    lenData_exp_i = lenData_exp(:, :, iExp);
-    [acc_avg, acc_sem] = Mean_and_Se(angAcc_exp_i, 1);
+    figure('Position', [100 100 280 160]), clf;
     
-    axes(ha(ha_i));
-    %% plotting the curve for individual subject
-    for iSub = 1 : subLen
-        plot(circle_list, angAcc_exp_i(iSub, :), 'Color', [0.4, 0.4, 0.4], 'LineStyle', '-', 'LineWidth', 1); hold on;
+    angAcc_exp_i = angAcc_exp(:, :, iExp);
+    for iSub = 1 : size(angAcc_exp_i, 1)
+        plot(circle_list, angAcc_exp_i(iSub, :), 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', 0.5); hold on;
     end
-    shadedErrorBar(circle_list, acc_avg, acc_sem, {'Color', 'r', 'MarkerFaceColor', 'r', 'LineStyle', '-', 'LineWidth', 2}, 0.5); hold on;
+    [acc_avg, acc_sem] = Mean_and_Se(angAcc_exp_i, 1);
+    shadedErrorBar(circle_list, acc_avg, acc_sem, {'Color', colorSets(7, :), 'MarkerFaceColor', colorSets(7, :), 'LineStyle', LineSty, 'LineWidth', 3}, 0.5); hold on;
     ylim([0, 1]);
     ylimit = ylim;
-    xLoc = 0.98;
-    %%
+    xLoc = 0.99;
+    % mark the significance
     [~, ~, ~, adj_p] = fdr_bh(squeeze(stat_mat(:, 1, iExp)), 0.05, 'pdep'); % method: 'dep', 'pdep'
     for iCir = 1 : length(circle_list)
         pval_j = adj_p(iCir);
-        if pval_j < 0.01
-            plot(circle_list(iCir), xLoc * ylimit(end), 'Marker', '.', 'MarkerSize', 8, 'Color', colorSets(iExp, :), 'MarkerFaceColor', colorSets(iExp, :), 'LineStyle', 'none', 'LineWidth', 1.5); hold on;
-        elseif pval_j < 0.05 && pval_j >= 0.01
-            plot(circle_list(iCir), xLoc * ylimit(end), 'Marker', '>', 'MarkerSize', 4, 'Color', colorSets(iExp, :), 'MarkerFaceColor', colorSets(iExp, :), 'LineStyle', 'none', 'LineWidth', 1.5); hold on;
+        if pval_j < 0.05
+            plot(circle_list(iCir), xLoc * ylimit(end), 'Marker', '.', 'MarkerSize', 4, 'Color', colorSets(7, :), 'MarkerFaceColor', colorSets(7, :), 'LineStyle', 'none'); hold on;
         end
-    end
-    if iExp == 1 || iExp == 3
-        plot([0.8, 0.8], ylim, 'k:', 'LineWidth', 1); hold on;
     end
     plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'k--', 'LineWidth', 1); hold on;
-    axis xy;
-    set(gca, 'LineWidth', 2);
-    set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
-    box off;
-    
-    ha_i = ha_i + 1;
-end
-%% plotting the accuracy from 3 experiments together
-% added by rxj @ 06/14/2022
-% angAcc_exp = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
-figure('Position', [100 100 600 220]), clf;
-test_name  = 'oneSampT';
-xLoc = 0.99;
-for iExp = 1 : length(expList)
-    angAcc_times = angAcc_exp(:, :, iExp);
-
-    %% statistical test
-    %%% one-sample t test
-    tail_id = 'right';
-    stat_mat = zeros(length(circle_list), 2); % 2: p value and t score
-    for iTime = 1 : length(circle_list)
-        angAcc_exp_i = angAcc_times(:, iTime);
-        [h, p, ci, stats] = ttest(angAcc_exp_i, (1/2+1/3+1/4)/3, 'Tail', tail_id);
-        stat_mat(iTime, 1) = p;
-        stat_mat(iTime, 2) = stats.tstat;
-    end
-
-    %% plotting
-    [beta_Avg, beta_Sem] = Mean_and_Se(angAcc_times, 1);
-    shadedErrorBar(circle_list, beta_Avg, beta_Sem, {'Color', colorComp(iExp, :), 'MarkerFaceColor', colorComp(iExp, :), 'LineStyle', '-', 'LineWidth', 3}, 0.5); hold on;
-    ylim([0, 1]);
-    ylimit = ylim;
-    %% FDR correction
-    % stat_mat = zeros(length(circle_list), 2); % 2: p value and t score
-    [~, ~, ~, adj_p] = fdr_bh(stat_mat(:, 1), 0.05, 'pdep'); % method: 'dep', 'pdep'
-    for iTime = 1 : length(circle_list)
-        p_i = adj_p(iTime);
-        if p_i < 0.01
-            plot(circle_list(iTime), xLoc * ylimit(end), 'Marker', '*', 'MarkerSize', 4, 'Color', colorComp(iExp, :)); hold on;
-        elseif p_i < 0.05 && p_i >= 0.01
-            plot(circle_list(iTime), xLoc * ylimit(end), 'Marker', '.', 'MarkerSize', 10, 'Color', colorComp(iExp, :), 'MarkerFaceColor', colorComp(iExp, :), 'LineStyle', 'none', 'LineWidth', 1.5); hold on;
-        end
-    end
-    xLoc = xLoc - 0.05;
-end
-%xlim([0, 0.8]);
-plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'k--', 'LineWidth', 1); hold on;
-plot([0.8, 0.8], ylim, 'k:', 'LineWidth', 1); hold on;
-set(gca, 'LineWidth', 2);
-set(gca, 'FontSize', 18, 'FontWeight', 'bold', 'FontName', 'Arial');
-box off;
-
-%% plotting the accuracy from 3 experiments together: separately for training and testing
-% added by rxj @ 06/14/2022
-%angAcc_Rand_exp = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
-%angAcc_Hami_exp = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
-for iPath = 1 : 2
-    if iPath == 1
-        angAcc_iPath = angAcc_Rand_exp;
-    elseif iPath == 2
-        angAcc_iPath = angAcc_Hami_exp;
-    end
-    figure('Position', [100 100 400 220]), clf;
-    test_name  = 'oneSampT';
-    xLoc = 0.99;
-    for iExp = 1 : length(expList)
-        angAcc_times = angAcc_iPath(:, :, iExp);
-        
-        %% statistical test
-        %%% one-sample t test
-        tail_id = 'right';
-        stat_mat = zeros(length(circle_list), 2); % 2: p value and t score
-        for iTime = 1 : length(circle_list)
-            angAcc_exp_i = angAcc_times(:, iTime);
-            [h, p, ci, stats] = ttest(angAcc_exp_i, (1/2+1/3+1/4)/3, 'Tail', tail_id);
-            stat_mat(iTime, 1) = p;
-            stat_mat(iTime, 2) = stats.tstat;
-        end
-        
-        %% plotting
-        [beta_Avg, beta_Sem] = Mean_and_Se(angAcc_times, 1);
-        shadedErrorBar(circle_list, beta_Avg, beta_Sem, {'Color', colorComp(iExp, :), 'MarkerFaceColor', colorComp(iExp, :), 'LineStyle', '-', 'LineWidth', 3}, 0.5); hold on;
-        ylim([0, 1]);
-        ylimit = ylim;
-        %% FDR correction
-        % stat_mat = zeros(length(circle_list), 2); % 2: p value and t score
-        [~, ~, ~, adj_p] = fdr_bh(stat_mat(:, 1), 0.05, 'pdep'); % method: 'dep', 'pdep'
-        for iTime = 1 : length(circle_list)
-            p_i = adj_p(iTime);
-            if p_i < 0.01
-                plot(circle_list(iTime), xLoc * ylimit(end), 'Marker', '*', 'MarkerSize', 4, 'Color', colorComp(iExp, :)); hold on;
-            elseif p_i < 0.05 && p_i >= 0.01
-                plot(circle_list(iTime), xLoc * ylimit(end), 'Marker', '.', 'MarkerSize', 10, 'Color', colorComp(iExp, :), 'MarkerFaceColor', colorComp(iExp, :), 'LineStyle', 'none', 'LineWidth', 1.5); hold on;
-            end
-        end
-        xLoc = xLoc - 0.05;
-    end
-    %xlim([0, 0.8]);
-    plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'k--', 'LineWidth', 1); hold on;
-    plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
-    set(gca, 'LineWidth', 2);
-    set(gca, 'FontSize', 18, 'FontWeight', 'bold', 'FontName', 'Arial');
-    box off;
-    
-end
-
-
-
-%% accuracy comparison between Exp1.1 (implicit) and Exp1.4 (implicit+cluster)
-%%% only the Hamiltonian trials
-figure('Position', [100 100 400 300]), clf;
-expIds = [1, 2, 3];
-for i = 1 : length(expIds)
-    angAcc_exp_i = angAcc_Rand_exp(:, :, expIds(i)); % angAcc_Hami_exp(:, :, expIds(i)); % 
-    if expIds(i) == 4 
-        angAcc_exp_i(12 : end, :) = [];
-    elseif expIds(i) == 5
-        angAcc_exp_i(14 : end, :) = [];
-    end
-    [acc_avg, acc_sem] = Mean_and_Se(angAcc_exp_i, 1);
-    shadedErrorBar(circle_list, acc_avg, acc_sem, {'Color', colorSets(i, :), 'MarkerFaceColor', colorSets(i, :), 'LineStyle', '-', 'LineWidth', 2}, 0.5); hold on;
-    ylim([0, 1]);
-end
-plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'k--', 'LineWidth', 1); hold on;
-plot([0.8, 0.8], ylim, 'k:', 'LineWidth', 1); hold on;
-axis xy;
-set(gca, 'LineWidth', 2);
-set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
-box off;
-
-%% -------------Part 2: separately for 1, 2 & 3 distractors-------------
-%% statistical testing in each time point
-stat_mat_dtr = zeros(length(circle_list), 2, 3, length(expList)); % 3 means distractors
-for iExp = 1 : length(expList)
-    for iTime = 1 : length(circle_list)
-        for iDtr = 1 : 3
-            angAcc_exp_i = angAcc_dtr_exp(:, iTime, iDtr, iExp); % angAcc_dtr_exp = zeros(subLen, length(circle_list), 3, length(expList));
-            [h, p, ci, stats] = ttest(angAcc_exp_i, 1 / (iDtr + 1), 'Tail', 'right');
-            stat_mat_dtr(iTime, 1, iDtr, iExp) = p;
-            stat_mat_dtr(iTime, 2, iDtr, iExp) = stats.tstat;
-        end
-    end
-end
-
-%% plotting the accuracy time curves
-figure('Position', [100 100 1000 300]), clf;
-ha = tight_subplot(1, length(expList), [.05 .05], [.1 .02], [.05 .05]);
-ha_i = 1;
-for iExp = 1 : length(expList)
-    axes(ha(ha_i));
-    xLoc = 0.98;
-    for iDtr = 1 : 3
-        angAcc_exp_i = angAcc_dtr_exp(:, :, iDtr, iExp);
-        [acc_avg, acc_sem] = Mean_and_Se(angAcc_exp_i, 1);
-        
-        shadedErrorBar(circle_list, acc_avg, acc_sem, {'Color', colorSets(iDtr, :), 'MarkerFaceColor', colorSets(iDtr, :), 'LineStyle', '-', 'LineWidth', 2}, 0.5); hold on;
-        
-        %% labeling the significance
-        ylim([0, 1]);
-        ylimit = ylim;
-        [~, ~, ~, adj_p] = fdr_bh(squeeze(stat_mat_dtr(:, 1, iDtr, iExp)), 0.05, 'pdep'); % method: 'dep', 'pdep'
-        for iCir = 1 : length(circle_list)
-            pval_j = adj_p(iCir);
-            if pval_j < 0.01
-                plot(circle_list(iCir), xLoc * ylimit(end), 'Marker', '.', 'MarkerSize', 8, 'Color', colorSets(iDtr, :), 'MarkerFaceColor', colorSets(iDtr, :), 'LineStyle', 'none', 'LineWidth', 1.5); hold on;
-            elseif pval_j < 0.05 && pval_j >= 0.01
-                plot(circle_list(iCir), xLoc * ylimit(end), 'Marker', '>', 'MarkerSize', 4, 'Color', colorSets(iDtr, :), 'MarkerFaceColor', colorSets(iDtr, :), 'LineStyle', 'none', 'LineWidth', 1.5); hold on;
-            end
-            
-        end
-        xLoc = xLoc - 0.03;
-        plot(xlim, [1/(iDtr + 1), 1/(iDtr + 1)], 'Color', colorSets(iDtr, :), 'LineStyle', '--', 'LineWidth', 1); hold on;
-    end
     if iExp == 1 || iExp == 3
-        plot([0.8, 0.8], ylim, 'k:', 'LineWidth', 1); hold on;
-    end
-    
-    axis xy;
-    set(gca, 'LineWidth', 2);
-    set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
-    box off;
-    ha_i = ha_i + 1;
-end
-
-%% %% -------------Part 3: random-walk trials (1-700 trials) and hamiltonian-walk trials (701-1500 trials)-------------
-% added by rxj @ 03/14/2022
-% angAcc_Rand_exp = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
-% angAcc_Hami_exp = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
-figure('Position', [100 100 1000 300]), clf;
-ha = tight_subplot(1, length(expList), [.05 .05], [.1 .02], [.05 .05]);
-LineList  = {'-', ':', '-.'};
-colorList = {'r', 'b', 'k'};
-ha_i = 1;
-for iExp = 1 : length(expList)
-    axes(ha(ha_i));
-    %% plotting the curve for random and hamiltonian walks
-    for j = 1 : 3
-        if j == 1     %% random
-            angAcc_exp_i = angAcc_Rand_exp(:, :, iExp);
-        elseif j == 2 %% hamiltonian
-            angAcc_exp_i = angAcc_Hami_exp(:, :, iExp);
-        elseif j == 3
-            angAcc_exp_i = angAcc_exp(:, :, iExp);
-        end
-        [acc_avg, acc_sem] = Mean_and_Se(angAcc_exp_i, 1);
-        shadedErrorBar(circle_list, acc_avg, acc_sem, {'Color', colorList{j}, 'MarkerFaceColor', colorList{j}, 'LineStyle', LineList{j}, 'LineWidth', 2}, 0.5); hold on;
+        plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
     end
     ylim([0, 1]);
-    ylimit = ylim;
-    xLoc = 0.98;
-    %%
-%     [~, ~, ~, adj_p] = fdr_bh(squeeze(stat_mat(:, 1, iExp)), 0.05, 'pdep'); % method: 'dep', 'pdep'
-%     for iCir = 1 : length(circle_list)
-%         pval_j = adj_p(iCir);
-%         if pval_j < 0.01
-%             plot(circle_list(iCir), xLoc * ylimit(end), 'Marker', '.', 'MarkerSize', 8, 'Color', colorSets(iExp, :), 'MarkerFaceColor', colorSets(iExp, :), 'LineStyle', 'none', 'LineWidth', 1.5); hold on;
-%         elseif pval_j < 0.05 && pval_j >= 0.01
-%             plot(circle_list(iCir), xLoc * ylimit(end), 'Marker', '>', 'MarkerSize', 4, 'Color', colorSets(iExp, :), 'MarkerFaceColor', colorSets(iExp, :), 'LineStyle', 'none', 'LineWidth', 1.5); hold on;
-%         end
-%     end
-    if iExp == 1 || iExp == 3
-        plot([0.8, 0.8], ylim, 'k:', 'LineWidth', 1); hold on;
-    end
-    plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'k--', 'LineWidth', 1); hold on;
     axis xy;
     set(gca, 'LineWidth', 2);
-    set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'FontSize', 16, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'XTick', 0 : 0.4 : 1.5, 'XTickLabel', '');
+    set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
     box off;
-    
-    ha_i = ha_i + 1;
+    ax = gca;
+    %exportgraphics(ax, "Fig2e. learningCurve-LeafToHub.eps", "Resolution", 1000);
 end
 
 %% accuracy for the within- and between-transitions in Random and Hamiltonian Walk trials separately
 % write by rxj @ 09/01/2022
 colorSets = [0.98, 0.72, 0.69; ...
-    0.97, 0.85, 0.67; ...
-    0.33, 0.73, 0.83; ...
-    0.72, 0.80, 0.88; ...
-    0.54, 0.67, 0.20; ...
-    0.82, 0.92, 0.78; ...
-    0.78, 0.50, 0.75; ...
-    0.86, 0.80, 0.89; ...
-    0.75, 0.56, 0; ...
-    0.40, 0.40, 0.40];
+             0.97, 0.85, 0.67; ...
+             0.33, 0.73, 0.83; ...
+             0.72, 0.80, 0.88; ...
+             0.54, 0.67, 0.20; ...
+             0.82, 0.92, 0.78; ...
+             0.78, 0.50, 0.75; ...
+             0.86, 0.80, 0.89; ...
+             0.75, 0.56, 0; ...
+             0.40, 0.40, 0.40];
 colorExp = colorSets([1, 3, 5], :);
 chance_i = mean([1/2, 1/3, 1/4]);
 for iExp = 1 : 3

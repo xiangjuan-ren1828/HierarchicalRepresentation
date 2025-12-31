@@ -151,7 +151,10 @@ RTtransTp_Blc       = zeros(subLen, 2, nBlock);
 RTtransTp_type_Blc  = cell(1, 2); % random vs. hamiltonian walks
 RTtransTp_lure      = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
 lureTrialLen        = zeros(subLen, 2 * 2);
-RTtransTp_type_lure = zeros(subLen, 2, 2, 2); % the last 2 denotes 'random and hamiltonian' walk
+% first 2:  with or without lure stimulus
+% second 2: boundary-to-within transition or bounary-to-boundary transition
+% third 3:  random or hamiltonian walk
+RTtransTp_type_lure = zeros(subLen, 2, 2, 2);
 RToverall_Blc_dtNum = zeros(subLen, 3, nBlock); % 3 distractor conditions
 lme_subj = [];
 for SubIdx = 1 : subLen
