@@ -18,6 +18,8 @@ addpath('fdr_bh');
 rndTrial = 700;
 HamTrial = 800;
 nTrials  = rndTrial + HamTrial;
+nBin     = 100;
+BinL     = nTrials / nBin;
 
 expModeList = {'mouse', 'key'};
 iMode       = 1;
@@ -109,6 +111,16 @@ acc_trans_traj_lure = zeros(subLen, length(circle_list), 2, 2, length(expList));
 % third 3:  random or hamiltonian walk
 acc_trans_walk_lure      = zeros(subLen, 2, 2, 2, length(expList));
 acc_trans_walk_traj_lure = zeros(subLen, length(circle_list), 2, 2, 2, length(expList));
+%%% learning curves
+% all trials together
+angAcc_ln_exp            = nan(subLen, BinL, length(expList));
+% different distractor numbers
+angAcc_ln_dtr_exp        = nan(subLen, BinL, 3, length(expList));
+% within- vs. between-trans
+angAcc_trans_ln_exp      = nan(subLen, BinL, 2, length(expList));    % 2: within- vs. between transition
+% within- vs. between-trans for Random and Hamiltonian Walk
+angAcc_trans_walk_ln_exp = nan(subLen, BinL, 2, 2, length(expList)); % first 2: within- vs. between transition; 2nd 2: random vs. hamiltonian walk
+
 for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
     %% Subject
@@ -390,6 +402,25 @@ for iExp = 1 : length(expList)
             acc_trans_walk_traj_lure(iSub, iTp, 2, 2, 2, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 2)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 2));
         end
 
+        %% learning effect: accuracy in sliding bins at all sampling time points
+        % ------ all trials together ------
+        % angAcc_ln_exp            = nan(subLen, BinL, length(expList));
+        % ------ different distractor numbers ------ 
+        % angAcc_ln_dtr_exp        = nan(subLen, BinL, 3, length(expList));
+        % ------ within- vs. between-trans ------ 
+        % angAcc_trans_ln_exp      = nan(subLen, BinL, 2, length(expList));    % 2: within- vs. between transition
+        % ------ within- vs. between-trans for Random and Hamiltonian Walk ------ 
+        % angAcc_trans_walk_ln_exp = nan(subLen, BinL, 2, 2, length(expList)); % first 2: within- vs. between transition; 2nd 2: random vs. hamiltonian walk
+
+        for iB = 1 : BinL
+            trlIdx = (iB - 1) * nBin + 1 : iB * nBin;
+            choiceId_trl = choiceId_trials(trlIdx);
+            choiceId_trl(isnan(choiceId_trl)) = [];
+            angAcc_tp_ln(iSub, iB)      = length(find(choiceId_trl == 1)) / length(choiceId_trl);
+        end
+
+
+
         %% accuracy of within- and between-transitions for Random and Hamiltonian Walk trials
         transStyle(isnan(choiceId_ang))   = [];
         rndHam_Col(isnan(choiceId_ang))   = [];
@@ -460,17 +491,34 @@ for iExp = 1 : length(expList)
 end
 
 %% color settings
-colorSets = [0.98, 0.72, 0.69; ...
-            0.97, 0.85, 0.67; ...
-            0.33, 0.73, 0.83; ...
-            0.72, 0.80, 0.88; ...
-            0.54, 0.67, 0.20; ...
-            0.82, 0.92, 0.78; ...
-            0.78, 0.50, 0.75; ...
-            0.86, 0.80, 0.89; ...
-            0.75, 0.56, 0; ...
-            0.40, 0.40, 0.40];
-colorComp = colorSets([1, 3, 5], :);
+colorSet = [249, 183, 176; ... % red 
+            84, 185, 211; ...  % blue
+            138, 170, 51; ...  % green
+            248, 218, 172; ...
+            184, 204, 225; ...
+            210, 234, 200; ...
+            198, 127, 192; ...
+            219, 204, 226] ./ [255, 255, 255];
+redGrad  = [189, 0, 38; ...
+            240, 59, 32; ...
+            253, 141, 60; ...
+            154, 178, 76; ...
+            254, 217, 118; ...
+            255, 255, 178] ./ 255;
+blueGrad = [8, 81, 156; ...
+            49, 130, 189; ...
+            107, 174, 214; ...
+            158, 202, 225; ...
+            198, 219, 239; ...
+            239, 243, 255] ./ 255;
+greeGrad = [0, 104, 55; ...
+            49, 163, 84; ...
+            120, 198, 121; ...
+            173, 221, 142; ...
+            217, 240, 163; ...
+            255, 255, 204] ./ 255;
+
+
 
 %% -------------SI figure: time curve by merging all trials with different distractors-------------
 %% statistical testing in each time point
@@ -487,7 +535,8 @@ end
 
 %% plotting the accuracy time curves
 % angAcc_exp = zeros(subLen, length(circle_list), nExp); %% accuracy in each time point
-LineSty = '-';
+LineSty  = '-';
+colorTmp = colorSet(7, :);
 for iExp = 1 : length(expList)
     figure('Position', [100 100 280 160]), clf;
     
@@ -496,7 +545,7 @@ for iExp = 1 : length(expList)
         plot(circle_list, angAcc_exp_i(iSub, :), 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', 0.5); hold on;
     end
     [acc_avg, acc_sem] = Mean_and_Se(angAcc_exp_i, 1);
-    shadedErrorBar(circle_list, acc_avg, acc_sem, {'Color', colorSets(7, :), 'MarkerFaceColor', colorSets(7, :), 'LineStyle', LineSty, 'LineWidth', 3}, 0.5); hold on;
+    shadedErrorBar(circle_list, acc_avg, acc_sem, {'Color', colorTmp, 'MarkerFaceColor', colorTmp, 'LineStyle', LineSty, 'LineWidth', 3}, 0.5); hold on;
     ylim([0, 1]);
     ylimit = ylim;
     xLoc = 0.99;
@@ -505,7 +554,7 @@ for iExp = 1 : length(expList)
     for iCir = 1 : length(circle_list)
         pval_j = adj_p(iCir);
         if pval_j < 0.05
-            plot(circle_list(iCir), xLoc * ylimit(end), 'Marker', '.', 'MarkerSize', 4, 'Color', colorSets(7, :), 'MarkerFaceColor', colorSets(7, :), 'LineStyle', 'none'); hold on;
+            plot(circle_list(iCir), xLoc * ylimit(end), 'Marker', '.', 'MarkerSize', 4, 'Color', colorTmp, 'MarkerFaceColor', colorTmp, 'LineStyle', 'none'); hold on;
         end
     end
     plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'k--', 'LineWidth', 1); hold on;
@@ -523,46 +572,85 @@ for iExp = 1 : length(expList)
     %exportgraphics(ax, "Fig2e. learningCurve-LeafToHub.eps", "Resolution", 1000);
 end
 
-%% accuracy for the within- and between-transitions in Random and Hamiltonian Walk trials separately
-% write by rxj @ 09/01/2022
-colorSets = [0.98, 0.72, 0.69; ...
-             0.97, 0.85, 0.67; ...
-             0.33, 0.73, 0.83; ...
-             0.72, 0.80, 0.88; ...
-             0.54, 0.67, 0.20; ...
-             0.82, 0.92, 0.78; ...
-             0.78, 0.50, 0.75; ...
-             0.86, 0.80, 0.89; ...
-             0.75, 0.56, 0; ...
-             0.40, 0.40, 0.40];
-colorExp = colorSets([1, 3, 5], :);
+%% SI figure: learning curve for different distractors across trial bins (100 trials/bin)
+
+
+
+
+%% BhevaiorPaper Figure xx: learning curve for within and between transitions across trial bins (100 trials/bin)
+
+
+
+
+%% BehaviorPaper Figure xx: accuracy for the within- and between-transitions in Random and Hamiltonian Walk trials separately
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+
+% acc_trans_walk = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+barPos   = [1, 1.5; 1.7, 2.2];
 chance_i = mean([1/2, 1/3, 1/4]);
+
 for iExp = 1 : 3
-    colorTmp = colorExp(iExp, :);
-    [accAvg_rOh, accSem_rOh] = Mean_and_Se(acc_trans_walk, 1);
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
+
+    acc_trans_walk_iExp = acc_trans_walk(:, :, :, iExp);
+    [accAvg_rOh, accSem_rOh] = Mean_and_Se(acc_trans_walk_iExp, 1);
     accAvg_rOh = squeeze(accAvg_rOh);
     accSem_rOh = squeeze(accSem_rOh); % acc_trans_walk = zeros(subLen, 2, 2, length(expList));
-    figure('Position', [100 100 280 180]), clf;
-    barPos = [1, 1.5; 1.7, 2.2];
-    for iB = 1 : 2
-        barPos_i = barPos(iB, :);
-        if iB == 1     %% random walk
-            LineBar = '-';
-        elseif iB == 2 %% hamiltonian walk
-            LineBar = ':';
+    for i_rOh = 1 : 2 % Random vs. Hamiltonian Walk
+        if i_rOh == 1
+            walkWord = 'Radom';
+        elseif i_rOh == 2
+            walkWord = 'Hamiltonian';
         end
+        barPos_i = barPos(i_rOh, :);
         %%% line plot
-        plot(barPos_i, acc_trans_walk(:, :, iB, iExp), '.-', 'LineWidth', 2, 'MarkerSize', 10, 'Color', [0.6, 0.6, 0.6]); hold on; % individuals
-        plot(barPos_i, accAvg_rOh(:, iB, iExp), 'Marker', '.', 'MarkerSize', 10, 'Color', colorTmp, 'LineStyle', 'none'); hold on;
-        errorbar(barPos_i(1), accAvg_rOh(1, iB, iExp), accSem_rOh(1, iB, iExp), 'Color', colorTmp, 'Marker', '.', 'LineStyle', '-', 'LineWidth', 4, 'MarkerSize', 10);
-        errorbar(barPos_i(2), accAvg_rOh(2, iB, iExp), accSem_rOh(2, iB, iExp), 'Color', colorTmp, 'Marker', '.', 'LineStyle', '-', 'LineWidth', 4, 'MarkerSize', 10);
+        plot(barPos_i, acc_trans_walk_iExp(:, :, i_rOh), 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', indvLineW); hold on;
+        plot(barPos_i, accAvg_rOh(:, i_rOh), 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for i_tp = 1 : 2 % within vs. between-transition
+            if i_rOh == 1
+                colorTmp = colorSet(i_tp, :);
+            elseif i_rOh == 2
+                colorTmp = 0.5 * colorSet(i_tp, :) + 0.5 * [1, 1, 1];
+            end
+            errorbar(barPos_i(i_tp), accAvg_rOh(i_tp, i_rOh), accSem_rOh(i_tp, i_rOh), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+            plot(barPos_i(i_tp), accAvg_rOh(i_tp, i_rOh), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+        end
+        % ------ Statistical tests ------
+        disp(['======== ', walkWord, '-within vs. between trans ========']);
+        [h, p, ci, stats] = ttest(acc_trans_walk_iExp(:, 1, i_rOh), acc_trans_walk_iExp(:, 2, i_rOh))
     end
-    set(gca, 'FontSize', 16, 'FontWeight', 'Bold', 'LineWidth', 2);
-    set(gca, 'XTick', '', 'XTickLabel', '');
-    xlim([0.9, barPos(end, end)+0.1]);
-    ylim([0.2, 0.8]);
-    plot(xlim, [chance_i, chance_i], 'Color', 'k', 'LineStyle', ':', 'LineWidth', 1); hold on;
+    xlim([0.6, 2.6]);
+    ylim([0.05, 0.8]);
+    plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+        set(gca, 'YTick', [0.05, 0.2 : 0.2 : 0.8], 'YTickLabel', '');
+    end
     box off;
+
 end
 
 %% paired-samplle t-test for within- and between-transitions
@@ -570,51 +658,31 @@ walkNo = 2;
 pairT_p = nan(length(expList), walkNo); % walkNo: random and hamiltonian walk
 pairT_t = nan(length(expList), walkNo);
 for iExp = 1 : length(expList)
-    for iB = 1 : 2
-        acc_trans_walk_i = acc_trans_walk(:, :, iB, iExp);
+    for i_rOh = 1 : 2 % Random vs. Hamiltonian Walk
+        acc_trans_walk_i  = acc_trans_walk(:, :, i_rOh, iExp);
         [h, p, ci, stats] = ttest(acc_trans_walk_i(:, 1), acc_trans_walk_i(:, 2));
-        pairT_p(iExp, iB) = p;
-        pairT_t(iExp, iB) = stats.tstat;
+        pairT_p(iExp, i_rOh) = p;
+        pairT_t(iExp, i_rOh) = stats.tstat;
     end
 end
 
 %% one-sample ttest: comparison with chance level
-
-%% trial proportions for within-cluster and between-cluster transitions under Random- and Hamiltonian-Walk
-% added by rxj @ 05/10/2023
-colorSets = [0.98, 0.72, 0.69; ...
-    0.97, 0.85, 0.67; ...
-    0.33, 0.73, 0.83; ...
-    0.72, 0.80, 0.88; ...
-    0.54, 0.67, 0.20; ...
-    0.82, 0.92, 0.78; ...
-    0.78, 0.50, 0.75; ...
-    0.86, 0.80, 0.89; ...
-    0.75, 0.56, 0; ...
-    0.40, 0.40, 0.40];
-colorExp = colorSets([1, 3, 5], :);
-figure('Position', [100 100 250 250]), clf;
-hold on;
-for iExp = 1 : 3
-    if iExp == 1
-        xLine = [1, 2, 3, 4];
-    elseif iExp == 2
-        xLine = [1.2, 2.2, 3.2, 4.2];
-    elseif iExp == 3
-        xLine = [1.4, 2.4, 3.4, 4.4];
+transNo = 2; % within- and between-trans
+walkNo  = 2; % random and hamiltonian walk
+oneSampT_stat = nan(walkNo, transNo, 2, length(expList)); % 2: p and t-stats
+chance_i = mean([1/2, 1/3, 1/4]);
+for iExp = 1 : length(expList)
+    for i_rOh = 1 : 2    % Random vs. Hamiltonian Walk
+        for i_tp = 1 : 2 % Within vs. Between transition
+            acc_trans_walk_i  = acc_trans_walk(:, i_tp, i_rOh, iExp);
+            [h, p, ci, stats] = ttest(acc_trans_walk_i, chance_i);
+            oneSampT_stat(i_rOh, i_tp, 1, iExp) = p;
+            oneSampT_stat(i_rOh, i_tp, 2, iExp) = stats.tstat;
+        end
     end
-    data_trlPro = trlPro_trans_walk(:, :, :, iExp);
-    [proAvg, proSem] = Mean_and_Se(data_trlPro, 1);
-    proAvg = squeeze(proAvg); % 1st dimension: within- & between-cluster transitions; 2nd dimension: Random & Hamiltonian Walk
-    proSem = squeeze(proSem);
-    errorbar(xLine(1 : 2), proAvg(:, 1), proSem(:, 1), 'Marker', '.', 'MarkerSize', 20, 'Color', colorExp(iExp, :), 'LineStyle', '-', 'LineWidth', 2); hold on;
-    errorbar(xLine(3 : 4), proAvg(:, 2), proSem(:, 2), 'Marker', '.', 'MarkerSize', 20, 'Color', colorExp(iExp, :), 'LineStyle', '-', 'LineWidth', 2); hold on;
-    
 end
-set(gca, 'FontSize', 18, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', 1 : 1 : 4, 'XTickLabel', '');
-xlim([0, 4.4 + 1]);
-box off;
+
+
 
 
 
