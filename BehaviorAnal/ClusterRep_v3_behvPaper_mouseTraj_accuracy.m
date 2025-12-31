@@ -638,7 +638,6 @@ for iExp = 1 : length(expList)
         end
     end
 end
-
 LineStys = {'-', '-.', ':'};
 for iExp = 1 : length(expList)
     figure('Position', [100 100 260 160]), clf;
@@ -652,8 +651,15 @@ for iExp = 1 : length(expList)
         angAcc_iDt = squeeze(angAcc_ln_dtr_exp(:, :, iDt, iExp));
         [accAvg, accSem] = Mean_and_Se(angAcc_iDt, 1);
         errorbar(1 : 1 : BinL, accAvg, accSem, 'Color', blueGrad(iDt, :), 'LineStyle', LineStys{iDt}, 'LineWidth', errLineWid); hold on;
+
+        [~, ~, ~, adj_p] = fdr_bh(squeeze(statsMat_dtr_exp(iDt, :, 1, iExp)), 0.05, 'pdep'); % method: 'dep', 'pdep'
         for iB = 1 : BinL
-            plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', blueGrad(iDt, :), 'LineStyle', '-'); hold on;
+            if adj_p(iB) < 0.05
+                markFace = blueGrad(iDt, :);
+            else
+                markFace = [1, 1, 1];
+            end
+            plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', markFace, 'LineStyle', '-'); hold on;
         end
     end
     xlim([0.5, BinL+0.5]);
