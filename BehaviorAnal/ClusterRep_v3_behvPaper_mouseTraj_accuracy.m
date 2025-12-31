@@ -660,9 +660,114 @@ for iExp = 1 : length(expList)
 end
 
 %% BhevaiorPaper Figure xx: learning curve for within and between transitions across trial bins (100 trials/bin)
+% angAcc_trans_ln_exp = nan(subLen, BinL, 2, length(expList));    % 2: within- vs. between transition
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 6;
+end
+nWalks = 2; % Random and Hamiltonian Walk
+nTrans = 2; % within and Between-cluster transition
+for iExp = 1 : length(expList)
+    figure('Position', [100 100 260 160]), clf;
+    hold on;
+    xlim([0.5, BinL+0.5]);
+    ylim([0.2, 0.8]);
+    plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'Color', [0.6, 0.6, 0.6], 'LineStyle', LineStys{1}, 'LineWidth', 0.8); hold on;
 
+    for iTs = 1 : nTrans % within- vs. between-trans
+        angAcc_ii = squeeze(angAcc_trans_ln_exp(:, :, iTs, iExp));
+        [accAvg, accSem] = Mean_and_Se(angAcc_ii, 1);
+        colorTmp = colorSet(iTs, :);
+        errorbar(1 : 1 : BinL, accAvg, accSem, 'Color', colorTmp, 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for iB = 1 : BinL
+            plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+        end
+    end
+    xlim([0.5, BinL+0.5]);
+    ylim([0.2, 0.8]);
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 1 : 1 : BinL, 'XTickLabel', 1 : 1 : BinL);
+        set(gca, 'YTick', 0.2 : 0.2 : 0.8, 'YTickLabel', 0.2 : 0.2 : 0.8);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 1 : 1 : BinL, 'XTickLabel', '');
+        set(gca, 'YTick', 0.2 : 0.2 : 0.8, 'YTickLabel', '');
+    end
+    box off;
+end
 
+%% BehaviorPaper Figure xx: learning curve for within and between transitions in Random and Hamiltonian Walk across trial bins (100 trials/bin)
+% angAcc_trans_walk_ln_exp = nan(subLen, BinL, 2, 2, length(expList)); % first 2: within- vs. between transition; 2nd 2: random vs. hamiltonian walk
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 6;
+end
+nWalks = 2; % Random and Hamiltonian Walk
+nTrans = 2; % within and Between-cluster transition
+for iExp = 1 : length(expList)
+    figure('Position', [100 100 260 160]), clf;
+    hold on;
+    xlim([0.5, BinL+0.5]);
+    ylim([0.2, 0.8]);
+    plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'Color', [0.6, 0.6, 0.6], 'LineStyle', LineStys{1}, 'LineWidth', 0.8); hold on;
 
+    for i_rOh = 1 : nWalks   % random walk vs. hamiltonian walk
+        for iTs = 1 : nTrans % within- vs. between-trans
+            angAcc_ii = squeeze(angAcc_trans_walk_ln_exp(:, :, iTs, i_rOh, iExp));
+            [accAvg, accSem] = Mean_and_Se(angAcc_ii, 1);
+            if i_rOh == 1
+                colorTmp = colorSet(iTs, :);
+            elseif i_rOh == 2
+                colorTmp = 0.5 * colorSet(iTs, :) + 0.5 * [1, 1, 1];
+            end
+            errorbar(1 : 1 : BinL, accAvg, accSem, 'Color', colorTmp, 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+            for iB = 1 : BinL
+                plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+            end
+        end
+    end
+    xlim([0.5, BinL+0.5]);
+    ylim([0.2, 0.8]);
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 1 : 1 : BinL, 'XTickLabel', 1 : 1 : BinL);
+        set(gca, 'YTick', 0.2 : 0.2 : 0.8, 'YTickLabel', 0.2 : 0.2 : 0.8);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 1 : 1 : BinL, 'XTickLabel', '');
+        set(gca, 'YTick', 0.2 : 0.2 : 0.8, 'YTickLabel', '');
+    end
+    box off;
+end
 
 %% BehaviorPaper Figure xx: accuracy for the within- and between-transitions in Random and Hamiltonian Walk trials separately
 figKey = 1;
