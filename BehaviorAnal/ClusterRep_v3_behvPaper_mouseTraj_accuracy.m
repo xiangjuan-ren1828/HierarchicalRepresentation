@@ -624,6 +624,21 @@ elseif figKey == 1
     indvLineW  = 0.4;
     markSize   = 6;
 end
+% ------ statistical tests for each bin ------
+statsMat_dtr_exp = nan(length(dtrNums), BinL, 2, length(expList)); % 2: p and tstats
+for iExp = 1 : length(expList)
+    for iDt = 1 : length(dtrNums)
+        ref_iDt = 1 / (iDt + 1);
+        for iB = 1 : BinL
+            angAcc_iB = squeeze(angAcc_ln_dtr_exp(:, iB, iDt, iExp));
+            % one-sample test
+            [h, p, ci, stats] = ttest(angAcc_iB, ref_iDt, 'Tail', 'right');
+            statsMat_dtr_exp(iDt, iB, 1, iExp) = p;
+            statsMat_dtr_exp(iDt, iB, 2, iExp) = stats.tstat;
+        end
+    end
+end
+
 LineStys = {'-', '-.', ':'};
 for iExp = 1 : length(expList)
     figure('Position', [100 100 260 160]), clf;
