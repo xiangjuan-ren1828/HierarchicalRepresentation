@@ -12,58 +12,62 @@ clc
 addpath('tight_subplot/');
 addpath(genpath('HierarchicalCluster/'));
 
-%% Subject
-ExpWord_List = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'};
-ExpIdx       = 3;
-ExpWord      = ExpWord_List{ExpIdx};
-if isequal(ExpWord, 'ImplicitExp')
-    subj_list = {'wsn_1_f_18', 'dy_2_f_22', 'haq_3_f_24', 'hry_4_f_20', 'zjx_5_m_20', 'yyq_6_f_18', 'zkw_7_m_18', 'zy_8_f_20', 'hys_9_m_20', 'cjj_10_m_18', ...
-                 'dwq_11_f_22', 'ljl_12_m_20', 'jyx_13_m_19', 'zk_14_f_21', 'lsy_15_m_19', 'cjl_16_m_19', 'yjy_17_f_23', 'lym_18_f_19', 'pr_19_f_23', 'ws_20_f_21', ...
-                 'wn_21_f_21', 'hjy_22_f_18', 'qyk_23_f_22', 'yd_24_f_20'};
-    subjLab   = {'wsn1', 'dy2', 'haq3', 'hry4', 'zjx5', 'yyq6', 'zkw7', 'zy8', 'hys9', 'cjj10', ...
-                 'dwq11', 'ljl12', 'jyx13', 'zk14', 'lsy15', 'cjl16', 'yjy17', 'lym18', 'pr19', 'ws20', ...
-                 'wn21', 'hjy22', 'qyk23', 'yd24'};
-elseif isequal(ExpWord, 'ExplicitExp')
-    subj_list = {'hsp_1_m_21', 'hr_2_f_22', 'pxy_3_m_19', 'wyx_4_m_22', 'lml_5_f_19', 'lf_6_m_21', 'md_7_f_21', 'srz_8_m_20', 'fsq_9_f_18', 'caq_10_f_20', ...
-                 'xjm_11_f_26', 'cjs_12_m_19', 'xxx_13_f_19', 'wsq_14_f_19', 'zzm_15_f_18', 'lsy_16_f_20', 'man_17_f_19', 'zxy_18_f_18', 'cyh_19_f_21', 'szn_20_f_19', ...
-                 'sb_21_m_22', 'drq_22_f_18', 'cy_23_f_18', 'zhc_24_m_21'}; 
-    subjLab   = {'hsp1', 'hr2', 'pxy3', 'wyx4', 'lml5', 'lf6', 'md7', 'srz8', 'fsq9', 'caq10', ...
-                 'xjm11', 'cjs12', 'xxx13', 'wsq14', 'zzm15', 'lsy16', 'man17', 'zxy18', 'cyh19', 'szn20', ...
-                 'sb21', 'drq22', 'cy23', 'zhc24'};  
-elseif isequal(ExpWord, 'ImplicitRandExp')
-    subj_list = {'zyh_1_f_21', 'why_2_m_18', 'cr_3_f_19', 'zyx_4_f_25', 'wym_5_m_23', 'wd_6_f_18', 'lyh_7_f_21', 'zr_8_f_24', 'zyh_9_m_19', 'zzy_10_f_19', ...
-                 'smq_11_f_25', 'sz_12_f_20', 'lzy_13_m_22', 'yxy_14_f_18', 'zxl_15_f_18', 'wqh_16_m_23', 'zxj_17_m_21', 'skx_18_f_20', 'zlh_19_m_24', 'gwt_20_f_23', ...
-                 'lwn_21_f_18', 'lrp_22_m_21', 'sjj_23_f_18', 'xy_24_f_19'}; % , 'xr_18_f_23'
-    subjLab   = {'zyh1', 'why2', 'cr3', 'zyx4', 'wym5', 'wd6', 'lyh7', 'zr8', 'lyh9', 'zzy10', ...
-                 'smq11', 'sz12', 'lzy13', 'yxy14', 'zxl15', 'wqh16', 'zxj17', 'skx18', 'zlh19', 'gwt20', ...
-                 'lwn21', 'lrp22', 'sjj23', 'xy24'}; % , 'xr18' 
-end
-subjNum   = 1 : length(subj_list);
-subj_listBv = subj_list;
-subLen      = length(subj_list);
-
-%% Experiment parameters
-folder = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
-if isequal(ExpWord, 'ImplicitExp')
-    bhvDataDir = [folder, '/FormalExp-LynnNetwork-Results/'];
-elseif isequal(ExpWord, 'ExplicitExp')
-    bhvDataDir = [folder, '/FormalExp-ExplicitLearning-LynnNetwork-Results/'];
-elseif isequal(ExpWord, 'ImplicitRandExp')
-    bhvDataDir = [folder, '/FormalExp-LynnNetwork-ImplicitRandom-Results/'];
-end
-
+%% Columns index for the clusterResult.mat
 rndTrial = 700;
-HamTrial = 800; 
+HamTrial = 800;
 nTrials  = rndTrial + HamTrial;
 rndInter = 85;
 HamInter = 15;
+nBin     = 100;
+BinL     = nTrials / nBin;
 
-tInBlc = [230, 2*230, 2*230+240, rndTrial + (200 : 200 : HamTrial)];
-nBlock = length(tInBlc); %% seperate the total trials into 10 blocks
-trialsInBlc = zeros(nBlock, 2);
-trialsInBlc(:, 1) = [1, tInBlc(1 : end - 1) + 1]';
-trialsInBlc(:, 2) = tInBlc;
-
+expModeList = {'mouse', 'key'};
+iMode       = 1;
+expMode_i   = expModeList{iMode};
+if isequal(expMode_i, 'mouse')
+    rndOrHam = 1; %% trial countings for the random (1-700) and hamiltonian (1-800) walk
+    blockNo  = 2; %% block number
+    trialNo  = 3; %% trial number
+    trialTp  = 4; %% trial type: 1-random; 2-hamiltonian
+    objTgt   = 5; %% target object
+    objResp  = 6 : 9; %% responded objects
+    moveTime = 10; %% moving time of the mouse
+    respRT   = 11; %% response reaction time
+    dispRT   = 12; %% object total display time
+    errorIdx = 13; %% whether error (including incorrect response and time out) or not: 1-yes
+    timeOIdx = 14; %% whether time out: 1-yes
+    bonusCn  = 15; %% bonus in each trial
+    trialLt  = 16; %% trial total length
+    imgPosX  = 17 : 20;
+    imgPosY  = 21 : 24;
+    fastIdx  = 25;
+elseif isequal(expMode_i, 'key')
+    rndOrHam = 1; %% trial countings for the random (1-700) and hamiltonian (1-800) walk
+    blockNo  = 2; %% block number
+    trialNo  = 3; %% trial number
+    trialTp  = 4; %% trial type: 1-random; 2-hamiltonian
+    objTgt   = 5; %% target object
+    objResp  = 6 : 7; %% responded objects
+    cueOn    = 8; %% cue onset time after stimuli onsets: jitter between 0.9 and 1.2
+    duraT    = 9;
+    moveTime = 10; %% moving time of the mouse
+    respRT   = 11; %% response reaction time
+    dispRT   = 12; %% object total display time
+    errorIdx = 13; %% whether error (including incorrect response and time out) or not: 1-yes
+    timeOIdx = 14; %% whether time out: 1-yes
+    errCnt   = 15;
+    bonusCn  = 16; %% bonus in each trial
+    trialLt  = 17; %% trial total length
+    imgPosX  = 18 : 19;
+    imgPosY  = 20 : 21;
+    fastIdx  = 22;
+    imgAngs  = 23 : 24;
+    fixLast  = 25;
+    base_err = 26 : 27;
+    resp_err = 28 : 29;
+    fixFroze = 30;
+    keyPress = 31;
+end
 tgtNum  = 1;
 dtrNums = [1, 2, 3];
 nodeNum = 15;
@@ -71,38 +75,8 @@ clsDef  = [1, 2, 3, 4, 5; ...  %% the 1st cluster
            6, 7, 8, 9, 10; ... %% the 2nd cluster
            11, 12, 13, 14, 15];%% the 3rd cluster
 transMat = LynnNetwork();
+miniDmat = modelRDM_minimalDist();
 
-% loss function
-marioWin = 100; % For each trial, the maximal bonus is 100 cents(?).
-marioLos = -marioWin;
-lf_slope = -marioWin/1.5;      %% slope of linear function, y = ax + b
-lf_inter = 100 + marioWin/1.5; %% intercept of linear function
-
-% Durations
-fixationDur = 0.6; %% seconds
-respDur     = 2;   %3s;
-grayoffT    = 0.8; %1s;   %% For the 1st second, the gray cue won't appear.
-grayOnT     = 0.8; %1s;   %% For 1-2s, the gray square will be overlapped on the target image; for 2-3s, the gray square superimposed on the target image with the largest gray scale
-bonusDec    = 0.5; %% bonus decreased from 100 to 0 within 0.5s
-bonusTime   = 1;   %% Only for practice trials
-
-%% Columns index for the clusterResult.mat 
-rndOrHam = 1; %% trial countings for the random (1-700) and hamiltonian (1-800) walk
-blockNo  = 2; %% block number
-trialNo  = 3; %% trial number
-trialTp  = 4; %% trial type: 1-random; 2-hamiltonian
-objTgt   = 5; %% target object
-objResp  = 6 : 9; %% responded objects
-moveTime = 10; %% moving time of the mouse
-respRT   = 11; %% response reaction time
-dispRT   = 12; %% object total display time
-errorIdx = 13; %% whether error (including incorrect response and time out) or not: 1-yes
-timeOIdx = 14; %% whether time out: 1-yes
-bonusCn  = 15; %% bonus in each trial
-trialLt  = 16; %% trial total length
-imgPosX  = 17 : 20;
-imgPosY  = 21 : 24;
-fastIdx  = 25;
 
 %% For the boundary node, if another boundary within the same cluster exists, how about the RTs?
 % added by rxj @ 08/24/2021
@@ -193,159 +167,600 @@ transOut_clsOutDtr{6} = [15, 1, 2; 15, 1, 3; 15, 1, 4];
 %% indicating the distractor
 dtrCond = input('DistractorNo condition, 1-one, 2-two, 3-three, 4-merged: '); % only trials with 1, 2, 3 distractors or 4 (merge all kinds of distractors)
 
-%% calculations: both RTs and choice accuracy
-RT_transIn_subj  = zeros(bndNode_Num, 2, subLen);
-RT_transOut_subj = zeros(bndNode_Num, 2, subLen);
-transIn_Len  = zeros(bndNode_Num, 2, subLen);
-transOut_Len = zeros(bndNode_Num, 2, subLen);
-for SubIdx = 1 : subLen
-    subjBv      = subj_listBv{SubIdx};
-    subTit      = subjLab{SubIdx};
-    subjDir     = [bhvDataDir, subjBv, '/'];
-    load([subjDir, subjBv, 'clusterResult_Blocks.mat'], 'clusterResult');
-    
-    respRT_Col   = clusterResult(:, respRT);
-    errorIdx_Col = clusterResult(:, errorIdx);
-    rndHam_Col   = clusterResult(:, trialTp); 
-    fast_Col     = clusterResult(:, fastIdx); 
-    %%% within vs. between cluster transition RTs
-    from_nodes = clusterResult(:, objTgt);
-    to_nodes   = clusterResult(:, objResp(1));
-    dt_nodes   = clusterResult(:, objResp);
-    exId = find(errorIdx_Col ~= 0 | fast_Col == 1);
-    %%% within vs. between cluster transition RTs across different distractor numbers
-    dtNum = arrayfun(@(x) length(find(dt_nodes(x, :)~=0)), (1 : nTrials)');
-    dtNum = dtNum - 1;
-    
-    respRT_Col(exId, :) = [];
-    from_nodes(exId, :) = [];
-    to_nodes(exId, :)   = [];
-    dt_nodes(exId, :)   = [];
-    dtNum(exId, :)      = [];
-    if dtrCond == 1 || dtrCond == 2 || dtrCond == 3
-        respRT_Col = respRT_Col(dtNum == dtrCond, :);
-        from_nodes = from_nodes(dtNum == dtrCond, :);
-        to_nodes   = to_nodes(dtNum == dtrCond, :);
-        dt_nodes   = dt_nodes(dtNum == dtrCond, 2 : (dtrCond + 1));
-    end
+%% 3 Experiments:
+% I didn't regress out the confounding variables from RTs.
+circle_list = 0 : 1/60 : 1.5;
+states      = 15;
+nFit        = 100;
+expList     = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'}; 
+folder      = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 
-    RT_transIn  = zeros(bndNode_Num, 2);
-    RT_transOut = zeros(bndNode_Num, 2);
-    for i = 1 : bndNode_Num
-        %% ---------transition: from boundary node to within node---------
-        transIn_InDtr  = transIn_clsInDtr{i}; % transIn_clsInDtr{1} = [1, 2, 5; 1, 3, 5; 1, 4, 5];
-        transIn_OutDtr = transIn_clsOutDtr{i}; 
-        RTs_InDtr  = [];
-        for j = 1 : size(transIn_InDtr, 1)
-            pair_j = transIn_InDtr(j, :);
-            dt_Yes = sum((dt_nodes == pair_j(3)), 2);
-            RTs_InDtr  = [RTs_InDtr; respRT_Col(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1))];
-        end
-        RTs_OutDtr = [];
-        for k = 1 : size(transIn_OutDtr, 1)
-            pair_k = transIn_OutDtr(k, :);
-            dt_Yes = sum((dt_nodes == pair_k(3)), 2);
-            RTs_OutDtr = [RTs_OutDtr; respRT_Col(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1))];
-        end
-        RT_transIn(i, 1) = nanmean(RTs_InDtr);
-        RT_transIn(i, 2) = nanmean(RTs_OutDtr);
+subLen = 24;
+% ---------- RTs ----------
+RT_transIn_subj  = zeros(bndNode_Num, 2, subLen, length(expList)); % 2: with vs. without lure stimulus
+RT_transOut_subj = zeros(bndNode_Num, 2, subLen, length(expList));
+transIn_Len  = zeros(bndNode_Num, 2, subLen, length(expList));
+transOut_Len = zeros(bndNode_Num, 2, subLen, length(expList));
+% ---------- Choice accuracy: one-hot measure ----------
+acc_transIn_subj  = zeros(bndNode_Num, 2, subLen, length(expList));
+acc_transOut_subj = zeros(bndNode_Num, 2, subLen, length(expList));
+% ---------- Choice accuracy: trajectory ----------
+acc_transIn_traj_subj  = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+acc_transOut_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+% ---------- Quantify the distance between cue and distractors, distance between target and distractors ----------
+cue_dtr_distance_subj = cell();
+tgt_dtr_distance_subj = cell();
 
-        %%% trial length of each combination
-        transIn_Len(i, 1, SubIdx)  = length(RTs_InDtr);
-        transIn_Len(i, 2, SubIdx)  = length(RTs_OutDtr);
-    
-        %% ---------transition: from boundary node to boundary node---------
-        transOut_InDtr  = transOut_clsInDtr{i};
-        transOut_OutDtr = transOut_clsOutDtr{i};
-        RTs_InDtr = [];
-        for j = 1 : size(transOut_InDtr, 1)
-            pair_j = transOut_InDtr(j, :);
-            dt_Yes = sum((dt_nodes == pair_j(3)), 2);
-            RTs_InDtr = [RTs_InDtr; respRT_Col(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1))];
-        end
-        
-        RTs_OutDtr = [];
-        for k = 1 : size(transOut_OutDtr, 1)
-            pair_k = transOut_OutDtr(k, :);
-            dt_Yes = sum((dt_nodes == pair_k(3)), 2);
-            RTs_OutDtr = [RTs_OutDtr; respRT_Col(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1))];
-        end
-        RT_transOut(i, 1) = nanmean(RTs_InDtr);
-        RT_transOut(i, 2) = nanmean(RTs_OutDtr);
-        
-        %%% trial length of each combination
-        transOut_Len(i, 1, SubIdx)  = length(RTs_InDtr);
-        transOut_Len(i, 2, SubIdx)  = length(RTs_OutDtr);
-        
+for iExp = 1 : length(expList)
+    ExpWord = expList{iExp};
+    %% Subject
+    if isequal(ExpWord, 'ImplicitExp')
+        bhvDataDir = [folder, '/FormalExp-LynnNetwork-Results/'];
+        subj_list  = {'wsn_1_f_18', 'dy_2_f_22', 'haq_3_f_24', 'hry_4_f_20', 'zjx_5_m_20', 'yyq_6_f_18', 'zkw_7_m_18', 'zy_8_f_20', 'hys_9_m_20', 'cjj_10_m_18', ...
+                      'dwq_11_f_22', 'ljl_12_m_20', 'jyx_13_m_19', 'zk_14_f_21', 'lsy_15_m_19', 'cjl_16_m_19', 'yjy_17_f_23', 'lym_18_f_19', 'pr_19_f_23', 'ws_20_f_21', ...
+                      'wn_21_f_21', 'hjy_22_f_18', 'qyk_23_f_22', 'yd_24_f_20'};
+        subjLab    = {'wsn1', 'dy2', 'haq3', 'hry4', 'zjx5', 'yyq6', 'zkw7', 'zy8', 'hys9', 'cjj10', ...
+                      'dwq11', 'ljl12', 'jyx13', 'zk14', 'lsy15', 'cjl16', 'yjy17', 'lym18', 'pr19', 'ws20', ...
+                      'wn21', 'hjy22', 'qyk23', 'yd24'};
+        tInBlc = [230, 2*230, 2*230+240, rndTrial + (200 : 200 : HamTrial)];
+
+    elseif isequal(ExpWord, 'ExplicitExp')
+        bhvDataDir = [folder, '/FormalExp-ExplicitLearning-LynnNetwork-Results/'];
+        subj_list  = {'hsp_1_m_21', 'hr_2_f_22', 'pxy_3_m_19', 'wyx_4_m_22', 'lml_5_f_19', 'lf_6_m_21', 'md_7_f_21', 'srz_8_m_20', 'fsq_9_f_18', 'caq_10_f_20', ...
+                      'xjm_11_f_26', 'cjs_12_m_19', 'xxx_13_f_19', 'wsq_14_f_19', 'zzm_15_f_18', 'lsy_16_f_20', 'man_17_f_19', 'zxy_18_f_18', 'cyh_19_f_21', 'szn_20_f_19', ...
+                      'sb_21_m_22', 'drq_22_f_18', 'cy_23_f_18', 'zhc_24_m_21'};
+        subjLab    = {'hsp1', 'hr2', 'pxy3', 'wyx4', 'lml5', 'lf6', 'md7', 'srz8', 'fsq9', 'caq10', ...
+                      'xjm11', 'cjs12', 'xxx13', 'wsq14', 'zzm15', 'lsy16', 'man17', 'zxy18', 'cyh19', 'szn20', ...
+                      'sb21', 'drq22', 'cy23', 'zhc24'};
+        tInBlc = [230, 2*230, 2*230+240, rndTrial + (200 : 200 : HamTrial)];
+
+    elseif isequal(ExpWord, 'ImplicitRandExp')
+        bhvDataDir = [folder, '/FormalExp-LynnNetwork-ImplicitRandom-Results/'];
+        subj_list  = {'zyh_1_f_21', 'why_2_m_18', 'cr_3_f_19', 'zyx_4_f_25', 'wym_5_m_23', 'wd_6_f_18', 'lyh_7_f_21', 'zr_8_f_24', 'zyh_9_m_19', 'zzy_10_f_19', ...
+                      'smq_11_f_25', 'sz_12_f_20', 'lzy_13_m_22', 'yxy_14_f_18', 'zxl_15_f_18', 'wqh_16_m_23', 'zxj_17_m_21', 'skx_18_f_20', 'zlh_19_m_24', 'gwt_20_f_23', ...
+                      'lwn_21_f_18', 'lrp_22_m_21', 'sjj_23_f_18', 'xy_24_f_19'}; % , 'xr_18_f_23'
+        subjLab    = {'zyh1', 'why2', 'cr3', 'zyx4', 'wym5', 'wd6', 'lyh7', 'zr8', 'lyh9', 'zzy10', ...
+                      'smq11', 'sz12', 'lzy13', 'yxy14', 'zxl15', 'wqh16', 'zxj17', 'skx18', 'zlh19', 'gwt20', ...
+                      'lwn21', 'lrp22', 'sjj23', 'xy24'}; % , 'xr18'
+        tInBlc = [230, 2*230, 2*230+240, rndTrial + (200 : 200 : HamTrial)];
+
     end
-    RT_transIn_subj(:, :, SubIdx)  = RT_transIn;
-    RT_transOut_subj(:, :, SubIdx) = RT_transOut;
+    nBlock = length(tInBlc); %% seperate the total trials into 10 blocks
+    trialsInBlc = zeros(nBlock, 2);
+    trialsInBlc(:, 1) = [1, tInBlc(1 : end - 1) + 1]';
+    trialsInBlc(:, 2) = tInBlc;
+
+    if isequal(expMode_i, 'mouse') %% read the mouseTraj.csv
+        angleDir = [bhvDataDir, 'angleCal/'];
+        angleTraj_pd_subj = readtable([angleDir, 'angleTraj_pd_subj.csv']);
+        %%% variables
+        subNo_col    = angleTraj_pd_subj.subNo;
+        trialCnt_col = angleTraj_pd_subj.trialCnt;
+        blockNo_col  = angleTraj_pd_subj.blockNo;
+        trialNo_col  = angleTraj_pd_subj.trialNo;
+        tgtAng_col   = angleTraj_pd_subj.tgtAng;
+        dtrAng1_col  = angleTraj_pd_subj.dtrAng1;
+        dtrAng2_col  = angleTraj_pd_subj.dtrAng2;
+        dtrAng3_col  = angleTraj_pd_subj.dtrAng3;
+        dtrNoCnt_col = angleTraj_pd_subj.dtrNoCnt; %% 1, 2, 3
+    end
+    subj_listBv = subj_list;
+    subLen      = length(subj_list);
+
+    for SubIdx = 1 : subLen
+        disp([ExpWord, '-subj', num2str(SubIdx)]);
+        %%
+        subjBv      = subj_listBv{SubIdx};
+        subTit      = subjLab{SubIdx};
+        subjDir     = [bhvDataDir, subjBv, '/'];
+        load([subjDir, subjBv, 'clusterResult_Blocks.mat'], 'clusterResult');
+
+        respRT_Col   = clusterResult(:, respRT);
+        errorIdx_Col = clusterResult(:, errorIdx);
+        timeOIdx_Col = clusterResult(:, timeOIdx);
+        rndHam_Col   = clusterResult(:, trialTp);
+        fast_Col     = clusterResult(:, fastIdx);
+        %%% within vs. between cluster transition RTs
+        from_nodes = clusterResult(:, objTgt);
+        to_nodes   = clusterResult(:, objResp(1));
+        dt_nodes   = clusterResult(:, objResp);
+        transIn    = zeros(nTrials, 3);
+        lureIn     = zeros(nTrials, 1); % whether there are two items selected from the same cluster
+        for ic = 1 : size(clsDef, 1)
+            if ic == 1
+                clsIdx = find(from_nodes >= 1 & from_nodes <= 5);
+            elseif ic == 2
+                clsIdx = find(from_nodes >= 6 & from_nodes <= 10);
+            elseif ic == 3
+                clsIdx = find(from_nodes >= 11 & from_nodes <= 15);
+            end
+            transIn(clsIdx, 1) = arrayfun(@(x) ismember(x, clsDef(ic, :)), from_nodes(clsIdx));
+            transIn(clsIdx, 2) = arrayfun(@(x) ismember(x, clsDef(ic, :)), to_nodes(clsIdx));
+            transIn(clsIdx, 3) = repmat(ic, length(clsIdx), 1);
+            for i_cls = 1 : length(clsIdx)
+                lureFind = arrayfun(@(x) ismember(x, clsDef(ic, :)), dt_nodes(clsIdx(i_cls), 2 : end));
+                lureIn(clsIdx(i_cls), 1) = length(find(lureFind == 1));
+            end
+        end
+        transStyle = (transIn(:, 1) == transIn(:, 2)); % 1-within transition; 0-between transition
+        nodesLabel = zeros(nTrials, 1);
+        nodesLabel(from_nodes == 1 | from_nodes == 5 | from_nodes == 6 | from_nodes == 10 | from_nodes == 11 | from_nodes == 15) = 1;
+
+        %%% within vs. between cluster transition RTs across different distractor numbers
+        dtNum = arrayfun(@(x) length(find(dt_nodes(x, :)~=0)), (1 : nTrials)');
+        dtNum = dtNum - 1;
+
+        %%% mouse trajectory trials
+        load([subjDir, subjBv,  'respYes_trials_blc.mat'], 'respYes_trials_blc');
+        load([subjDir, subjBv,  'mouseTraj_trials_blc.mat'], 'mouseTraj_trials_blc');
+
+        %%% !!!!!!!! remove the time-out trials !!!!!!!! %%%
+        stim = clusterResult(:, objTgt);
+        resp = clusterResult(:, objResp);
+        %%% extract the angles
+        choiceId_ang  = nan(length(stim), 1);
+        choiceId      = nan(length(stim), length(circle_list));
+        dtrNoCnt_iSub = nan(length(stim), 1);
+        iCount   = 1;
+        for iBlock = 1 : nBlock
+            blc_i = find((subNo_col == (SubIdx - 1)) & (blockNo_col == (iBlock - 1)));
+            trlNo_i   = trialNo_col(blc_i);
+            tgtAng_i  = tgtAng_col(blc_i);
+            dtrAng1_i = dtrAng1_col(blc_i);
+            dtrAng2_i = dtrAng2_col(blc_i);
+            dtrAng3_i = dtrAng3_col(blc_i);
+            dtrNoCnt_i= dtrNoCnt_col(blc_i);
+
+            ttBlcIdx = (trialsInBlc(iBlock, 1) : trialsInBlc(iBlock, 2))';
+            mouseTraj_trials = mouseTraj_trials_blc(ttBlcIdx);
+            %load([subjDir, subjBv,  'mouseTraj_trials_in_Blc', num2str(iBlock), '.mat'], 'mouseTraj_trials');
+
+            for jTrl = 1 : length(mouseTraj_trials)
+                trl_j     = find(trlNo_i == (jTrl - 1));
+                tgtAng_j  = tgtAng_i(trl_j);
+                dtrAng1_j = dtrAng1_i(trl_j);
+                dtrAng2_j = dtrAng2_i(trl_j);
+                dtrAng3_j = dtrAng3_i(trl_j);
+                objAngs   = [tgtAng_j, dtrAng1_j, dtrAng2_j, dtrAng3_j];
+                dtrNoCnt_j= dtrNoCnt_i(trl_j);
+                dtrNoCnt_iSub(iCount) = unique(dtrNoCnt_j);
+
+                timePass  = mouseTraj_trials{jTrl}(:, 4);
+                %%% click time point (response before cue) or time point
+                %%% before cue onset (response after cue)
+                cueTp      = find(timePass <= 0.8);
+                cueTp_stay = cueTp(end); %% the final stay point before cue onset
+                objAngs_stay = objAngs(cueTp_stay, :);
+                objAngs_stay_left = objAngs_stay(1 : (unique(dtrNoCnt_j) + 1));
+                if ~any(isnan(objAngs_stay_left))
+                    [~, minId] = min(abs(objAngs_stay_left));
+                    if minId == 1
+                        choiceId_ang(iCount) = 1; % 1: choose the target
+
+                    elseif minId ~= 1
+                        choiceId_ang(iCount) = 0; % 0: choose the non-target
+                    end
+                end
+
+                %%% every time point
+                for iTp = 1 : length(circle_list)
+                    time_i = circle_list(iTp);
+                    cueTp  = find(timePass <= time_i);
+                    if ~isempty(cueTp)
+                        cueTp_stay = cueTp(end); %% the final stay point before cue onset
+                        if cueTp_stay > length(objAngs) %% ????????
+                            objAngs_stay = objAngs(end, :);
+                        else
+                            objAngs_stay = objAngs(cueTp_stay, :);
+                        end
+
+                        objAngs_stay_left = objAngs_stay(1 : (unique(dtrNoCnt_j) + 1));
+                        if ~any(isnan(objAngs_stay_left))
+                            [~, minId] = min(abs(objAngs_stay_left));
+                            if minId == 1
+                                choiceId(iCount, iTp) = 1;
+
+                            elseif minId ~= 1
+                                choiceId(iCount, iTp) = 0;
+
+                            end
+                        end
+                    end
+                end
+                iCount = iCount + 1;
+            end
+        end
+
+        % ------------ distractor conditions ------------
+        if dtrCond == 1 || dtrCond == 2 || dtrCond == 3
+            errorIdx_Col = errorIdx_Col(dtNum == dtrCond, :);
+            fast_Col     = fast_Col(dtNum == dtrCond, :);
+            rndHam_Col   = rndHam_Col(dtNum == dtrCond, :);
+            from_nodes   = from_nodes(dtNum == dtrCond, :);
+            to_nodes     = to_nodes(dtNum == dtrCond, :);
+            dt_nodes     = dt_nodes(dtNum == dtrCond, 2 : (dtrCond + 1));
+            respRT_Col   = respRT_Col(dtNum == dtrCond, :);
+            choiceId_ang = choiceId_ang(dtNum == dtrCond, :);
+            choiceId     = choiceId(dtNum == dtrCond, :);
+        end
+
+        %% quantify the influence of lure stimulus on RTs and choice accuracy
+        % ------ boundary-to-within transition ------
+        RT_transIn   = zeros(bndNode_Num, 2); % 2: with vs. without lure stimulus
+        acc_transIn  = zeros(bndNode_Num, 2);
+        % ------ boundary-to-boundary transition ------
+        RT_transOut  = zeros(bndNode_Num, 2);
+        acc_transOut = zeros(bndNode_Num, 2);
+        for i = 1 : bndNode_Num
+            %% ---------transition: from boundary node to within node---------
+            transIn_InDtr  = transIn_clsInDtr{i}; % transIn_clsInDtr{1} = [1, 2, 5; 1, 3, 5; 1, 4, 5];
+            transIn_OutDtr = transIn_clsOutDtr{i};
+            RTs_InDtr = [];
+            acc_InDtr = [];
+            acc_InDtr_traj = cell(1, length(circle_list));
+            for j = 1 : size(transIn_InDtr, 1)
+                pair_j = transIn_InDtr(j, :);
+                dt_Yes = sum((dt_nodes == pair_j(3)), 2);
+                % ------ RTs ------
+                RTs_InDtr = [RTs_InDtr; respRT_Col(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
+                % ------ choice accuracy ------
+                acc_InDtr = [acc_InDtr; length(find(choiceId_ang == 1 & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1)), length(find(~isnan(choiceId_ang) & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1))];
+                % ------ choice accuracy trajectory ------
+                for iTp = 1 : length(circle_list)
+                    choiceId_iTp = choiceId(:, iTp);
+                    acc_InDtr_traj{iTp} = [acc_InDtr_traj{iTp}; length(find(choiceId_iTp == 1 & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1)), length(find(~isnan(choiceId_iTp) & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1))];
+                end
+                % ------ quantify the distance between cue/target and the non-lure distractor ------
+                cue_j = pair_j(1);
+                tgt_j = pair_j(2);
+                dtr_j = dt_nodes(dt_Yes, :);
+                dtr_j = dtr_j(dtr_j ~= 0);
+                cue_dtr_dis = nan(length(dtr_j), 1);
+
+                %%% distance between distractors and fromNode (cue)
+                minD_cue_i   = miniDmat((dt_nodes(iT, 2 : dtNum(iT)))', from_nodes(iT));
+                minD_cue(iT) = nanmean(minD_cue_i);
+
+
+                for dd = 1 : length(dtr_j)
+                    cue_dtr_dis(dd) = miniDmat
+
+                    minD_cue_i   = miniDmat((dt_nodes(iT, 2 : dtNum(iT)))', from_nodes(iT));
+
+                end
+            end
+            RTs_OutDtr = [];
+            acc_OutDtr = [];
+            acc_OutDtr_traj = cell(1, length(circle_list));
+            for k = 1 : size(transIn_OutDtr, 1)
+                pair_k = transIn_OutDtr(k, :);
+                dt_Yes = sum((dt_nodes == pair_k(3)), 2);
+                % ------ RTs ------
+                RTs_OutDtr = [RTs_OutDtr; respRT_Col(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
+                % ------ choice accuracy ------
+                acc_OutDtr = [acc_OutDtr; length(find(choiceId_ang == 1 & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1)), length(find(~isnan(choiceId_ang) & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1))];
+                % ------ choice accuracy trajectory ------
+                for iTp = 1 : length(circle_list)
+                    choiceId_iTp = choiceId(:, iTp);
+                    acc_OutDtr_traj{iTp} = [acc_OutDtr_traj{iTp}; length(find(choiceId_iTp == 1 & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1)), length(find(~isnan(choiceId_iTp) & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1))];
+                end
+            end
+            RT_transIn(i, 1)  = nanmean(RTs_InDtr);
+            RT_transIn(i, 2)  = nanmean(RTs_OutDtr);
+            acc_transIn(i, 1) = sum(acc_InDtr(:, 1)) / sum(acc_InDtr(:, 2));
+            acc_transIn(i, 2) = sum(acc_OutDtr(:, 1)) / sum(acc_OutDtr(:, 2));
+            for iTp = 1 : length(circle_list)
+                % acc_transIn_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+                % ------ with lure stimulus ------
+                acc_transIn_traj_subj(i, iTp, 1, SubIdx, iExp) = sum(acc_InDtr_traj{iTp}(:, 1)) / sum(acc_InDtr_traj{iTp}(:, 2));
+
+                % ------ without lure stimulus
+                acc_transIn_traj_subj(i, iTp, 2, SubIdx, iExp) = sum(acc_OutDtr_traj{iTp}(:, 1)) / sum(acc_OutDtr_traj{iTp}(:, 2));
+            end
+
+            %%% trial length of each combination
+            transIn_Len(i, 1, SubIdx, iExp)  = length(RTs_InDtr);
+            transIn_Len(i, 2, SubIdx, iExp)  = length(RTs_OutDtr);
+
+            %% ---------transition: from boundary node to boundary node---------
+            transOut_InDtr  = transOut_clsInDtr{i};
+            transOut_OutDtr = transOut_clsOutDtr{i};
+            RTs_InDtr = [];
+            acc_InDtr = [];
+            acc_InDtr_traj = cell(1, length(circle_list));
+            for j = 1 : size(transOut_InDtr, 1)
+                pair_j = transOut_InDtr(j, :);
+                dt_Yes = sum((dt_nodes == pair_j(3)), 2);
+                % ------ RTs ------
+                RTs_InDtr = [RTs_InDtr; respRT_Col(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
+                % ------ choice accuracy ------
+                acc_InDtr = [acc_InDtr; length(find(choiceId_ang == 1 & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1)), length(find(~isnan(choiceId_ang) & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1))];
+                % ------ choice accuracy trajectory ------
+                for iTp = 1 : length(circle_list)
+                    choiceId_iTp = choiceId(:, iTp);
+                    acc_InDtr_traj{iTp} = [acc_InDtr_traj{iTp}; length(find(choiceId_iTp == 1 & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1)), length(find(~isnan(choiceId_iTp) & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1))];
+                end
+            end
+
+            RTs_OutDtr = [];
+            acc_OutDtr = [];
+            acc_OutDtr_traj = cell(1, length(circle_list));
+            for k = 1 : size(transOut_OutDtr, 1)
+                pair_k = transOut_OutDtr(k, :);
+                dt_Yes = sum((dt_nodes == pair_k(3)), 2);
+                % ------ RTs ------
+                RTs_OutDtr = [RTs_OutDtr; respRT_Col(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
+                % ------ choice accuracy ------
+                acc_OutDtr = [acc_OutDtr; length(find(choiceId_ang == 1 & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1)), length(find(~isnan(choiceId_ang) & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1))];
+                % ------ choice accuracy trajectory ------
+                for iTp = 1 : length(circle_list)
+                    choiceId_iTp = choiceId(:, iTp);
+                    acc_OutDtr_traj{iTp} = [acc_OutDtr_traj{iTp}; length(find(choiceId_iTp == 1 & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1)), length(find(~isnan(choiceId_iTp) & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1))];
+                end
+            end
+            RT_transOut(i, 1) = nanmean(RTs_InDtr);
+            RT_transOut(i, 2) = nanmean(RTs_OutDtr);
+            acc_transOut(i, 1) = sum(acc_InDtr(:, 1)) / sum(acc_InDtr(:, 2));
+            acc_transOut(i, 2) = sum(acc_OutDtr(:, 1)) / sum(acc_OutDtr(:, 2));
+            for iTp = 1 : length(circle_list)
+                % acc_transOut_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+                % ------ with lure stimulus ------
+                acc_transOut_traj_subj(i, iTp, 1, SubIdx, iExp) = sum(acc_InDtr_traj{iTp}(:, 1)) / sum(acc_InDtr_traj{iTp}(:, 2));
+
+                % ------ without lure stimulus
+                acc_transOut_traj_subj(i, iTp, 2, SubIdx, iExp) = sum(acc_OutDtr_traj{iTp}(:, 1)) / sum(acc_OutDtr_traj{iTp}(:, 2));
+            end
+
+            %%% trial length of each combination
+            transOut_Len(i, 1, SubIdx)  = length(RTs_InDtr);
+            transOut_Len(i, 2, SubIdx)  = length(RTs_OutDtr);
+
+        end
+        % ---------- One-hot measure ----------
+        RT_transIn_subj(:, :, SubIdx, iExp)   = RT_transIn;
+        RT_transOut_subj(:, :, SubIdx, iExp)  = RT_transOut;
+        acc_transIn_subj(:, :, SubIdx, iExp)  = acc_transIn;
+        acc_transOut_subj(:, :, SubIdx, iExp) = acc_transOut;
+        % ---------- Trajectory ----------
+        % see above
+
+    end
 end
 
 %% color settings
-colorSet = [249, 183, 176; ... % pink
-    248, 218, 172; ...         % orange
-    138, 170, 51; ...          % dark green
-    210, 234, 200; ...         % light green
-    84, 185, 211; ...          % dark blue
-    184, 204, 225; ...         % light blue
-    198, 127, 192; ...         % dark purple
-    219, 204, 226; ...
-    102, 102, 102; ...
-    255, 255, 255] ./ [255, 255, 255];
-colorBehv = colorSet([1, 3], :);
-colorSubj = colorSet([1, 2, 3, 9], :);
-colorTrans = colorSet([1, 2, 3, 9, 10], :);
+colorSet = [249, 183, 176; ... % red 
+            84, 185, 211; ...  % blue
+            138, 170, 51; ...  % green
+            248, 218, 172; ...
+            184, 204, 225; ...
+            210, 234, 200; ...
+            198, 127, 192; ...
+            219, 204, 226] ./ [255, 255, 255];
+redGrad  = [189, 0, 38; ...
+            240, 59, 32; ...
+            253, 141, 60; ...
+            154, 178, 76; ...
+            254, 217, 118; ...
+            255, 255, 178] ./ 255;
+blueGrad = [8, 81, 156; ...
+            49, 130, 189; ...
+            107, 174, 214; ...
+            158, 202, 225; ...
+            198, 219, 239; ...
+            239, 243, 255] ./ 255;
+greeGrad = [0, 104, 55; ...
+            49, 163, 84; ...
+            120, 198, 121; ...
+            173, 221, 142; ...
+            217, 240, 163; ...
+            255, 255, 204] ./ 255;
+
 
 %% average
-%%% paired-sample t test
-RT_transIn_nodeAvg     = squeeze(nanmean(RT_transIn_subj, 1)); % 2 * subLen
+% % ---------- RTs ----------
+% RT_transIn_subj  = zeros(bndNode_Num, 2, subLen, length(expList)); % 2: with vs. without lure stimulus
+% RT_transOut_subj = zeros(bndNode_Num, 2, subLen, length(expList));
+% % ---------- Choice accuracy: one-hot measure ----------
+% acc_transIn_subj  = zeros(bndNode_Num, 2, subLen, length(expList));
+% acc_transOut_subj = zeros(bndNode_Num, 2, subLen, length(expList));
+% % ---------- Choice accuracy: trajectory ----------
+% acc_transIn_traj_subj  = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+% acc_transOut_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+
+% ---------- average across the boundar nodes ----------
+% ------ RTs ------
+RT_transIn_nodeAvg     = squeeze(nanmean(RT_transIn_subj, 1)); % 2 * subLen * length(expList)
 RT_transOut_nodeAvg    = squeeze(nanmean(RT_transOut_subj, 1));
 RT_transInDif_nodeAvg  = squeeze(nanmean(RT_transIn_subj(:, 2, :) - RT_transIn_subj(:, 1, :), 1)); % 1 * subLen
 RT_transOutDif_nodeAvg = squeeze(nanmean(RT_transOut_subj(:, 2, :) - RT_transOut_subj(:, 1, :), 1)); 
+% ------ choice accuracy ------
+acc_transIn_nodeAvg    = squeeze(nanmean(acc_transIn_subj, 1));
+acc_transOut_nodeAvg   = squeeze(nanmean(acc_transOut_subj, 1));
+% ------ choice accuracy trajectory ------
+acc_transIn_traj_nodeAvg  = squeeze(nanmean(acc_transIn_traj_subj, 1)); % length(circle_list) * 2 * subLen * length(expList)) 
+acc_transOut_traj_nodeAvg = squeeze(nanmean(acc_transOut_traj_subj, 1));
 
-%%% group mean
-[transIn_avg, transIn_sem]   = Mean_and_Se(squeeze(nanmean(RT_transIn_subj, 1)), 2);
-[transOut_avg, transOut_sem] = Mean_and_Se(squeeze(nanmean(RT_transOut_subj, 1)), 2);
 
-%% plotting: within-trans & between-trans separately
-% plot in the same figure, and as lines
-tail_id = 'both';
-barPos = [0.5, 1; 1.2, 1.7];
-figure('Position', [100 100 350 200]), clf;
-hold on;
-for iTrans = 1 : 2 % within- & between-transitions
-    if iTrans == 1
-        transWord = 'boundary-to-within';
-    elseif iTrans == 2
-        transWord = 'boundary-to-boundary';
-    end
-    barPos_i = barPos(iTrans, :);
-    if iTrans == 1
-        transAvg = transIn_avg;
-        transSem = transIn_sem;
-        data_i   = RT_transIn_nodeAvg';
-    elseif iTrans == 2
-        transAvg = transOut_avg;
-        transSem = transOut_sem;
-        data_i   = RT_transOut_nodeAvg';
-    end
-    plot(barPos_i, data_i, '-', 'LineWidth', 2, 'Color', [0.6, 0.6, 0.6]); hold on;
-    plot(barPos_i, transAvg, 'Color', colorBehv(iTrans, :), 'Marker', '.', 'LineStyle', '-', 'LineWidth', 4, 'MarkerSize', 1); hold on;
-    plot(barPos_i(1), transAvg(1), 'Marker', '.', 'MarkerSize', 10, 'Color', colorBehv(iTrans, :), 'MarkerFaceColor', colorBehv(iTrans, :), 'LineStyle', 'none'); hold on; 
-    plot(barPos_i(2), transAvg(2), 'Marker', '.', 'MarkerSize', 10, 'Color', colorBehv(iTrans, :), 'MarkerFaceColor', colorBehv(iTrans, :), 'LineStyle', 'none'); hold on; 
-    errorbar(barPos_i(1), transAvg(1), transSem(1), 'Color', colorBehv(iTrans, :), 'Marker', '.', 'MarkerFaceColor', colorBehv(iTrans, :), 'LineStyle', '-', 'LineWidth', 2, 'MarkerSize', 15); 
-    errorbar(barPos_i(2), transAvg(2), transSem(2), 'Color', colorBehv(iTrans, :), 'Marker', '.', 'MarkerFaceColor', colorBehv(iTrans, :), 'LineStyle', '-', 'LineWidth', 2, 'MarkerSize', 15); 
-
-    [h, p, ci, stats] = ttest(data_i(:, 1), data_i(:, 2), 'Tail', tail_id)
-    disp(['============== ', transWord, ': with vs. without lure ==============']);
-    disp(['t=', num2str(stats.tstat, '%4.3f'), ', p=', num2str(p, '%4.3f')])
+%% which data to plot
+dataFlg = 2;
+if dataFlg == 1    % RTs
+    trans_boundary_within   = RT_transIn_nodeAvg;
+    trans_boundary_boundary = RT_transOut_nodeAvg;
+elseif dataFlg == 2 % choice accuracy
+    trans_boundary_within   = acc_transIn_nodeAvg;
+    trans_boundary_boundary = acc_transOut_nodeAvg;
 end
-set(gca, 'FontSize', 20, 'FontWeight', 'Bold', 'LineWidth', 2);
-set(gca, 'XTick', '', 'XTickLabel', '');
-xlim([0.3, 1.9]);
-ylim([0.5, 2]);
-box off;
+
+%% BehavioralPaper, Figure xx: influence of lure stimulus on choice accuracy (one-hot metric)
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+tail_id  = 'both';
+if dtrCond == 1
+    chance_i = 1/2;
+elseif dtrCond == 2
+    chance_i = 1/3;
+elseif dtrCond == 3
+    chance_i = 1/4;
+elseif dtrCond ==4
+    chance_i = mean([1/2, 1/3, 1/4]);
+end
+for iExp = 1 : 3
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
+
+    barPos = [1, 1.5; 1.7, 2.2];
+    for iTb = 1 : 2     % 'transition from boundary node to within node vs. from boundary to boundary'
+        if iTb == 1
+            transWord     = 'boundary-to-within';
+            transData_iTb = trans_boundary_within(:, :, iExp);
+        elseif iTb == 2
+            transWord     = 'boundary-to-boundary';
+            transData_iTb = trans_boundary_boundary(:, :, iExp);
+        end
+        transData_iTb = transData_iTb'; % subLen * 2 (with vs. without lure stimulus)
+        [accAvg_rOh, accSem_rOh] = Mean_and_Se(transData_iTb, 1);
+
+        barPos_i = barPos(iTb, :);
+        %%% line plot
+        plot(barPos_i, transData_iTb, 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', indvLineW); hold on;
+        plot(barPos_i, accAvg_rOh, 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for ilr = 1 : 2 % 'lure distractor exists vs. none'
+            if ilr == 1
+                colorTmp = [0, 0, 0]; % with lure distractor
+            elseif ilr == 2
+                colorTmp = [1, 1, 1]; % without lure distractor
+            end
+            errorbar(barPos_i(ilr), accAvg_rOh(ilr), accSem_rOh(ilr), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+            plot(barPos_i(ilr), accAvg_rOh(ilr), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+        end
+        % ------ Statistical tests ------
+        disp(['======== ', transWord, ': with vs. without lure stimulus ========']);
+        [h, p, ci, stats] = ttest(transData_iTb(:, 1), transData_iTb(:, 2))
+        disp(['t=', num2str(stats.tstat, '%4.3f'), ', p=', num2str(p, '%4.3f')])
+    end
+    xlim([0.6, 2.6]);
+    if dataFlg == 1    % RTs
+        ylim([0.5, 2]);
+        if figKey == 0
+            % ------For presentation------
+            set(gca, 'LineWidth', 2);
+            set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+            set(gca, 'XTick', '', 'XTickLabel', '');
+            set(gca, 'YTick', [0.5, 1, 2], 'YTickLabel', [0.5, 1, 2]);
+        elseif figKey == 1
+            % ------For Adobe Illustrator------
+            set(gca, 'LineWidth', 0.8);
+            set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+            set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+            set(gca, 'YTick', [0.5, 1, 2], 'YTickLabel', '');
+        end
+
+    elseif dataFlg == 2 % choice accuracy
+        ylim([0, 1]);
+        plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
+        if figKey == 0
+            % ------For presentation------
+            set(gca, 'LineWidth', 2);
+            set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+            set(gca, 'XTick', '', 'XTickLabel', '');
+            set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+        elseif figKey == 1
+            % ------For Adobe Illustrator------
+            set(gca, 'LineWidth', 0.8);
+            set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+            set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+            set(gca, 'YTick', [0, 0.5, 1], 'YTickLabel', '');
+        end
+    end
+   
+    box off;
+end
+
+%% BehavioralPaper, Figure xx: influence of lure stimulus on choice accuracy trajectory
+% acc_transIn_traj_nodeAvg  = squeeze(nanmean(acc_transIn_traj_subj, 1)); % length(circle_list) * 2 * subLen * length(expList)) 
+% acc_transOut_traj_nodeAvg = squeeze(nanmean(acc_transOut_traj_subj, 1));
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+if dtrCond == 1
+    chance_i = 1/2;
+elseif dtrCond == 2
+    chance_i = 1/3;
+elseif dtrCond == 3
+    chance_i = 1/4;
+elseif dtrCond ==4
+    chance_i = mean([1/2, 1/3, 1/4]);
+end
+
+for iExp = 1 : 3
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
+
+    for iTb = 1 : 2     % 'transition from boundary node to within node vs. from boundary to boundary'
+        if iTb == 1
+            transWord          = 'boundary-to-within';
+            transData_traj_iTb = acc_transIn_traj_nodeAvg(:, :, :, iExp); % length(circle_list) * 2 * subLen
+            color_iTb          = redGrad(2, :);
+        elseif iTb == 2
+            transWord          = 'boundary-to-boundary';
+            transData_traj_iTb = acc_transOut_traj_nodeAvg(:, :, :, iExp);
+            color_iTb          = blueGrad(2, :);
+        end
+        [accAvg_rOh, accSem_rOh] = Mean_and_Se(transData_traj_iTb, 3); % length(circle_list) * 2
+        for ilr = 1 : 2 % 'lure distractor exists vs. none'
+            if ilr == 1
+                LineSty = '-';
+            elseif ilr == 2
+                LineSty = ':';
+            end
+            shadedErrorBar(circle_list, accAvg_rOh(:, ilr), accSem_rOh(:, ilr), {'Color', color_iTb, 'MarkerFaceColor', color_iTb, 'LineStyle', LineSty, 'LineWidth', 2}, 0.5); hold on;
+        end
+    end
+    xlim([0, 0.8]);
+    ylim([0, 1]);
+    plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
+    if iExp == 1 || iExp == 3
+        plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
+    end
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [0, 0.4, 0.8], 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+    end
+    box off;
+end
+
 
 
 

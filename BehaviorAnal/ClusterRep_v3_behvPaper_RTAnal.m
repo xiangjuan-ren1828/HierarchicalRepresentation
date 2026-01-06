@@ -16,7 +16,7 @@ addpath(genpath('HierarchicalCluster/'));
 
 %% Subject
 ExpWord_List = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'};
-ExpIdx       = 2;
+ExpIdx       = 1;
 ExpWord      = ExpWord_List{ExpIdx};
 if isequal(ExpWord, 'ImplicitExp')
     subj_list = {'wsn_1_f_18', 'dy_2_f_22', 'haq_3_f_24', 'hry_4_f_20', 'zjx_5_m_20', 'yyq_6_f_18', 'zkw_7_m_18', 'zy_8_f_20', 'hys_9_m_20', 'cjj_10_m_18', ...
@@ -548,7 +548,7 @@ RTtest = reshape(RTtest', [subLen * nTran * nWalk, 1]);
 %% with lure distractors vs. without
 % RTtransTp_lure      = zeros(subLen, 2, 2); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
 % RTtransTp_type_lure = zeros(subLen, 2, 2, 2); % the last 2 denotes 'random and hamiltonian' walk
-flg = 3;
+flg = 1;
 if flg == 1
     RTmat = RTtransTp_lure; %% mixture of random and hamiltonian path
 elseif flg == 2

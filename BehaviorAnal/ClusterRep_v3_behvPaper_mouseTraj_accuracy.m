@@ -454,9 +454,6 @@ for iExp = 1 : length(expList)
             angAcc_trans_walk_ln_exp(iSub, iB, 2, 2, iExp) = length(find(choiceId_trl == 1 & transStyle_trl == 0 & rndHam_Col_trl == 2)) / length(find(transStyle_trl == 0 & rndHam_Col_trl == 2)); %% between & Hamiltonian-walk
         end
 
-        %% trajectory or choice accuracy within a trial when tested with lure vs. without lure
-
-
         %% accuracy of within- and between-transitions for Random and Hamiltonian Walk trials
         transStyle(isnan(choiceId_ang))   = [];
         rndHam_Col(isnan(choiceId_ang))   = [];
@@ -911,9 +908,167 @@ for iExp = 1 : length(expList)
     end
 end
 
+%% with lure distractors vs. without: one-hot metric
+% acc_trans_lure      = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
+% acc_trans_walk_lure = zeros(subLen, 2, 2, 2, length(expList));
+% first 2:  with or without lure stimulus
+% second 2: boundary-to-within transition or bounary-to-boundary transition
+% third 3:  random or hamiltonian walk
 
+flg = 3;
+if flg == 1
+    ACCmat = acc_trans_lure; %% mixture of random and hamiltonian path
+elseif flg == 2
+    ACCmat = squeeze(acc_trans_walk_lure(:, :, :, 1, :)); %% only random path
+elseif flg == 3
+    ACCmat = squeeze(acc_trans_walk_lure(:, :, :, 2, :)); %% only hamiltonian path
+end
 
+%% BehavioralPaper, Figure xx: influence of lure stimulus on choice accuracy (one-hot metric)
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+chance_i = mean([1/2, 1/3, 1/4]);
+for iExp = 1 : 3
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
 
+    ACCmat_iExp = ACCmat(:, :, :, iExp);
+    [accAvg_rOh, accSem_rOh] = Mean_and_Se(ACCmat_iExp, 1);
+    accAvg_rOh = squeeze(accAvg_rOh);
+    accSem_rOh = squeeze(accSem_rOh);
+    barPos = [1, 1.5; 1.7, 2.2];
+    for iTb = 1 : 2     % 'transition from boundary node to within node vs. from boundary to boundary'
+        if iTb == 1
+            transWord = 'boundary-to-within';
+        elseif iTb == 2
+            transWord = 'boundary-to-boundary';
+        end
+        barPos_i = barPos(iTb, :);
+        %%% line plot
+        plot(barPos_i, ACCmat_iExp(:, :, iTb), 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', indvLineW); hold on;
+        plot(barPos_i, accAvg_rOh(:, iTb), 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for ilr = 1 : 2 % 'lure distractor exists vs. none'
+            if ilr == 1
+                colorTmp = [0, 0, 0]; % with lure distractor
+            elseif ilr == 2
+                colorTmp = [1, 1, 1]; % without lure distractor
+            end
+            errorbar(barPos_i(ilr), accAvg_rOh(ilr, iTb), accSem_rOh(ilr, iTb), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+            plot(barPos_i(ilr), accAvg_rOh(ilr, iTb), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+        end
+        % ------ Statistical tests ------
+        disp(['======== ', transWord, ': with vs. without lure stimulus ========']);
+        [h, p, ci, stats] = ttest(ACCmat_iExp(:, 1, iTb), ACCmat_iExp(:, 2, iTb))
+    end
+    xlim([0.6, 2.6]);
+    ylim([0.05, 0.8]);
+    plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+        set(gca, 'YTick', [0.05, 0.2 : 0.2 : 0.8], 'YTickLabel', '');
+    end
+    box off;
+end
 
+%% with lure distractors vs. without: trajectory
+% acc_trans_traj_lure      = zeros(subLen, length(circle_list), 2, 2, length(expList)); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
+% acc_trans_walk_traj_lure = zeros(subLen, length(circle_list), 2, 2, 2, length(expList));
+% first 2:  with or without lure stimulus
+% second 2: boundary-to-within transition or bounary-to-boundary transition
+% third 3:  random or hamiltonian walk
+
+flg = 1;
+if flg == 1
+    ACCmat_traj = acc_trans_traj_lure; %% mixture of random and hamiltonian path
+elseif flg == 2
+    ACCmat_traj = squeeze(acc_trans_walk_traj_lure(:, :, :, :, 1, :)); %% only random path
+elseif flg == 3
+    ACCmat_traj = squeeze(acc_trans_walk_traj_lure(:, :, :, :, 2, :)); %% only hamiltonian path
+end
+
+%% BehavioralPaper, Figure xx: influence of lure stimulus on choice accuracy trajectory
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+chance_i = mean([1/2, 1/3, 1/4]);
+
+for iExp = 1 : 3
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
+
+    ACCmat_iExp = ACCmat_traj(:, :, :, :, iExp);
+    [accAvg_rOh, accSem_rOh] = Mean_and_Se(ACCmat_iExp, 1);
+    accAvg_rOh = squeeze(accAvg_rOh); % length(circle_list) * 2 * 2
+    accSem_rOh = squeeze(accSem_rOh);
+    for iTb = 1 : 2     % 'transition from boundary node to within node vs. from boundary to boundary'
+        if iTb == 1
+            transWord = 'boundary-to-within';
+            color_iTb = redGrad(2, :);
+        elseif iTb == 2
+            transWord = 'boundary-to-boundary';
+            color_iTb = blueGrad(2, :);
+        end
+        for ilr = 1 : 2 % 'lure distractor exists vs. none'
+            if ilr == 1
+                LineSty = '-';
+            elseif ilr == 2
+                LineSty = ':';
+            end
+            shadedErrorBar(circle_list, accAvg_rOh(:, ilr, iTb), accSem_rOh(:, ilr, iTb), {'Color', color_iTb, 'MarkerFaceColor', color_iTb, 'LineStyle', LineSty, 'LineWidth', 2}, 0.5); hold on;
+        end
+    end
+    xlim([0, 0.8]);
+    ylim([0, 1]);
+    plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
+    if iExp == 1 || iExp == 3
+        plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
+    end
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [0, 0.4, 0.8], 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+    end
+    box off;
+end
 
 
