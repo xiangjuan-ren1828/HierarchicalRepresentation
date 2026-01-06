@@ -188,9 +188,11 @@ acc_transOut_subj = zeros(bndNode_Num, 2, subLen, length(expList));
 acc_transIn_traj_subj  = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
 acc_transOut_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
 % ---------- Quantify the distance between cue and distractors, distance between target and distractors ----------
-cue_dtr_distance_subj = cell();
-tgt_dtr_distance_subj = cell();
-
+cue_dtr_distance_subj = cell(subLen, 4, length(expList)); % 4: with vs. without lure stimulus for boundary-to-within and boundary-to-boundary transitions
+tgt_dtr_distance_subj = cell(subLen, 4, length(expList));
+% ---------- Relative angles between the mouse and the target/lure-distractor/control ----------
+ang_transIn_traj_subj  = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+ang_transOut_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
 for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
     %% Subject
@@ -301,6 +303,9 @@ for iExp = 1 : length(expList)
         choiceId_ang  = nan(length(stim), 1);
         choiceId      = nan(length(stim), length(circle_list));
         dtrNoCnt_iSub = nan(length(stim), 1);
+        %%% angle for the target and all distractors
+        angleMag_oneH = nan(length(stim), 4);
+        angleMag_time = nan(length(stim), length(circle_list), 4);
         iCount   = 1;
         for iBlock = 1 : nBlock
             blc_i = find((subNo_col == (SubIdx - 1)) & (blockNo_col == (iBlock - 1)));
@@ -323,14 +328,14 @@ for iExp = 1 : length(expList)
                 dtrAng3_j = dtrAng3_i(trl_j);
                 objAngs   = [tgtAng_j, dtrAng1_j, dtrAng2_j, dtrAng3_j];
                 dtrNoCnt_j= dtrNoCnt_i(trl_j);
-                dtrNoCnt_iSub(iCount) = unique(dtrNoCnt_j);
-
+                dtrNoCnt_iSub(iCount)    = unique(dtrNoCnt_j);
+   
                 timePass  = mouseTraj_trials{jTrl}(:, 4);
                 %%% click time point (response before cue) or time point
                 %%% before cue onset (response after cue)
-                cueTp      = find(timePass <= 0.8);
-                cueTp_stay = cueTp(end); %% the final stay point before cue onset
-                objAngs_stay = objAngs(cueTp_stay, :);
+                cueTp             = find(timePass <= 0.8);
+                cueTp_stay        = cueTp(end); %% the final stay point before cue onset
+                objAngs_stay      = objAngs(cueTp_stay, :);
                 objAngs_stay_left = objAngs_stay(1 : (unique(dtrNoCnt_j) + 1));
                 if ~any(isnan(objAngs_stay_left))
                     [~, minId] = min(abs(objAngs_stay_left));
@@ -340,6 +345,7 @@ for iExp = 1 : length(expList)
                     elseif minId ~= 1
                         choiceId_ang(iCount) = 0; % 0: choose the non-target
                     end
+                    angleMag_oneH(iCount, 1 : length(objAngs_stay_left)) = abs(objAngs_stay_left);
                 end
 
                 %%% every time point
@@ -391,6 +397,8 @@ for iExp = 1 : length(expList)
         % ------ boundary-to-boundary transition ------
         RT_transOut  = zeros(bndNode_Num, 2);
         acc_transOut = zeros(bndNode_Num, 2);
+
+        minD_dtr_to_CueTgt = [];
         for i = 1 : bndNode_Num
             %% ---------transition: from boundary node to within node---------
             transIn_InDtr  = transIn_clsInDtr{i}; % transIn_clsInDtr{1} = [1, 2, 5; 1, 3, 5; 1, 4, 5];
@@ -413,21 +421,17 @@ for iExp = 1 : length(expList)
                 % ------ quantify the distance between cue/target and the non-lure distractor ------
                 cue_j = pair_j(1);
                 tgt_j = pair_j(2);
-                dtr_j = dt_nodes(dt_Yes, :);
-                dtr_j = dtr_j(dtr_j ~= 0);
-                cue_dtr_dis = nan(length(dtr_j), 1);
+                dtr_j = dt_nodes(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1, :);
+                for dd = 1 : size(dtr_j, 1)
+                    dtr_j_dd = dtr_j(dd, :);
+                    dtr_j_dd = dtr_j_dd(dtr_j_dd ~= 0 & dtr_j_dd ~= pair_j(3));
+                    minD_cue_i = miniDmat(dtr_j_dd', cue_j);
+                    minD_tgt_i = miniDmat(dtr_j_dd', tgt_j);
 
-                %%% distance between distractors and fromNode (cue)
-                minD_cue_i   = miniDmat((dt_nodes(iT, 2 : dtNum(iT)))', from_nodes(iT));
-                minD_cue(iT) = nanmean(minD_cue_i);
-
-
-                for dd = 1 : length(dtr_j)
-                    cue_dtr_dis(dd) = miniDmat
-
-                    minD_cue_i   = miniDmat((dt_nodes(iT, 2 : dtNum(iT)))', from_nodes(iT));
-
+                    cue_dtr_distance_subj{SubIdx, 1, iExp} = [cue_dtr_distance_subj{SubIdx, 1, iExp}; minD_cue_i];
+                    tgt_dtr_distance_subj{SubIdx, 1, iExp} = [tgt_dtr_distance_subj{SubIdx, 1, iExp}; minD_tgt_i];
                 end
+                
             end
             RTs_OutDtr = [];
             acc_OutDtr = [];
@@ -443,6 +447,19 @@ for iExp = 1 : length(expList)
                 for iTp = 1 : length(circle_list)
                     choiceId_iTp = choiceId(:, iTp);
                     acc_OutDtr_traj{iTp} = [acc_OutDtr_traj{iTp}; length(find(choiceId_iTp == 1 & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1)), length(find(~isnan(choiceId_iTp) & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1))];
+                end
+                % ------ quantify the distance between cue/target and the non-lure distractor ------
+                cue_j = pair_k(1);
+                tgt_j = pair_k(2);
+                dtr_j = dt_nodes(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1, :);
+                for dd = 1 : size(dtr_j, 1)
+                    dtr_j_dd = dtr_j(dd, :);
+                    dtr_j_dd = dtr_j_dd(dtr_j_dd ~= 0 & dtr_j_dd ~= pair_k(3));
+                    minD_cue_i = miniDmat(dtr_j_dd', cue_j);
+                    minD_tgt_i = miniDmat(dtr_j_dd', tgt_j);
+
+                    cue_dtr_distance_subj{SubIdx, 2, iExp} = [cue_dtr_distance_subj{SubIdx, 2, iExp}; minD_cue_i];
+                    tgt_dtr_distance_subj{SubIdx, 2, iExp} = [tgt_dtr_distance_subj{SubIdx, 2, iExp}; minD_tgt_i];
                 end
             end
             RT_transIn(i, 1)  = nanmean(RTs_InDtr);
@@ -480,6 +497,19 @@ for iExp = 1 : length(expList)
                     choiceId_iTp = choiceId(:, iTp);
                     acc_InDtr_traj{iTp} = [acc_InDtr_traj{iTp}; length(find(choiceId_iTp == 1 & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1)), length(find(~isnan(choiceId_iTp) & from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1))];
                 end
+                % ------ quantify the distance between cue/target and the non-lure distractor ------
+                cue_j = pair_j(1);
+                tgt_j = pair_j(2);
+                dtr_j = dt_nodes(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1, :);
+                for dd = 1 : size(dtr_j, 1)
+                    dtr_j_dd = dtr_j(dd, :);
+                    dtr_j_dd = dtr_j_dd(dtr_j_dd ~= 0 & dtr_j_dd ~= pair_j(3));
+                    minD_cue_i = miniDmat(dtr_j_dd', cue_j);
+                    minD_tgt_i = miniDmat(dtr_j_dd', tgt_j);
+
+                    cue_dtr_distance_subj{SubIdx, 3, iExp} = [cue_dtr_distance_subj{SubIdx, 3, iExp}; minD_cue_i];
+                    tgt_dtr_distance_subj{SubIdx, 3, iExp} = [tgt_dtr_distance_subj{SubIdx, 3, iExp}; minD_tgt_i];
+                end
             end
 
             RTs_OutDtr = [];
@@ -496,6 +526,19 @@ for iExp = 1 : length(expList)
                 for iTp = 1 : length(circle_list)
                     choiceId_iTp = choiceId(:, iTp);
                     acc_OutDtr_traj{iTp} = [acc_OutDtr_traj{iTp}; length(find(choiceId_iTp == 1 & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1)), length(find(~isnan(choiceId_iTp) & from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1))];
+                end
+                % ------ quantify the distance between cue/target and the non-lure distractor ------
+                cue_j = pair_k(1);
+                tgt_j = pair_k(2);
+                dtr_j = dt_nodes(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1, :);
+                for dd = 1 : size(dtr_j, 1)
+                    dtr_j_dd = dtr_j(dd, :);
+                    dtr_j_dd = dtr_j_dd(dtr_j_dd ~= 0 & dtr_j_dd ~= pair_k(3));
+                    minD_cue_i = miniDmat(dtr_j_dd', cue_j);
+                    minD_tgt_i = miniDmat(dtr_j_dd', tgt_j);
+
+                    cue_dtr_distance_subj{SubIdx, 4, iExp} = [cue_dtr_distance_subj{SubIdx, 4, iExp}; minD_cue_i];
+                    tgt_dtr_distance_subj{SubIdx, 4, iExp} = [tgt_dtr_distance_subj{SubIdx, 4, iExp}; minD_tgt_i];
                 end
             end
             RT_transOut(i, 1) = nanmean(RTs_InDtr);
@@ -758,6 +801,98 @@ for iExp = 1 : 3
         set(gca, 'XTick', [0, 0.4, 0.8], 'XTickLabel', '');
         set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
     end
+    box off;
+end
+
+%% quantify the distance between the cue and non-lure/control stimulus or distance between the target and non-lure/control stimulus
+% cue_dtr_distance_subj = cell(subLen, 4, length(expList)); % 4: with vs. without lure stimulus for boundary-to-within and boundary-to-boundary transitions
+% tgt_dtr_distance_subj = cell(subLen, 4, length(expList));
+cue_dtr_disAvg = nan(subLen, 4, length(expList));
+tgt_dtr_disAvg = nan(subLen, 4, length(expList));
+for iExp = 1 : 3
+    for SubIdx = 1 : subLen
+        for ii = 1 : 4
+            % ------ distance between cue and non-lure/control stimulus ------
+            cue_dtr_disAvg(SubIdx, ii, iExp) = nanmean(cue_dtr_distance_subj{SubIdx, ii, iExp});
+
+            % ------ distance between target and non-lure/control stimulus ------
+            tgt_dtr_disAvg(SubIdx, ii, iExp) = nanmean(tgt_dtr_distance_subj{SubIdx, ii, iExp});
+        end
+    end
+end
+% ------ which data to plot ------
+disFlg = 1;
+if disFlg == 1     % distance between cue and non-lure stimulus
+    distance_cal = cue_dtr_disAvg;
+elseif disFlg == 2 % distance between target and non-lure stimulus
+    distance_cal = tgt_dtr_disAvg;
+end
+
+
+%% plotting
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+for iExp = 1 : 3
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
+
+    barPos = [1, 1.5; 1.7, 2.2];
+    for iTb = 1 : 2     % 'transition from boundary node to within node vs. from boundary to boundary'
+        if iTb == 1
+            transWord = 'boundary-to-within';
+            dis_iTb   = distance_cal(:, 1 : 2, iExp);
+        elseif iTb == 2
+            transWord = 'boundary-to-boundary';
+            dis_iTb   = distance_cal(:, 3 : 4, iExp);
+        end
+        [disAvg_rOh, disSem_rOh] = Mean_and_Se(dis_iTb, 1);
+
+        barPos_i = barPos(iTb, :);
+        %%% line plot
+        plot(barPos_i, dis_iTb, 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', indvLineW); hold on;
+        plot(barPos_i, disAvg_rOh, 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for ilr = 1 : 2 % 'lure distractor exists vs. none'
+            if ilr == 1
+                colorTmp = [0, 0, 0]; % with lure distractor
+            elseif ilr == 2
+                colorTmp = [1, 1, 1]; % without lure distractor
+            end
+            errorbar(barPos_i(ilr), disAvg_rOh(ilr), disSem_rOh(ilr), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+            plot(barPos_i(ilr), disAvg_rOh(ilr), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+        end
+        % ------ Statistical tests ------
+        disp(['======== ', transWord, ': with vs. without lure stimulus ========']);
+        [h, p, ci, stats] = ttest(dis_iTb(:, 1), dis_iTb(:, 2))
+        disp(['t=', num2str(stats.tstat, '%4.3f'), ', p=', num2str(p, '%4.3f')])
+    end
+    xlim([0.6, 2.6]);
+    ylim([2, 2.5]);
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+        %set(gca, 'YTick', [0, 0.5, 1], 'YTickLabel', '');
+    end
+   
     box off;
 end
 
