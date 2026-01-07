@@ -551,8 +551,6 @@ greeGrad = [0, 104, 55; ...
             217, 240, 163; ...
             255, 255, 204] ./ 255;
 
-
-
 %% -------------SI figure: time curve by merging all trials with different distractors-------------
 %% statistical testing in each time point
 stat_mat = zeros(length(circle_list), 2, length(expList)); % 3 means three experiments

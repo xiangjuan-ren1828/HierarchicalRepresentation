@@ -177,22 +177,24 @@ folder      = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 
 subLen = 24;
 % ---------- RTs ----------
-RT_transIn_subj  = zeros(bndNode_Num, 2, subLen, length(expList)); % 2: with vs. without lure stimulus
-RT_transOut_subj = zeros(bndNode_Num, 2, subLen, length(expList));
-transIn_Len  = zeros(bndNode_Num, 2, subLen, length(expList));
-transOut_Len = zeros(bndNode_Num, 2, subLen, length(expList));
+RT_transIn_subj        = nan(bndNode_Num, 2, subLen, length(expList)); % 2: with vs. without lure stimulus
+RT_transOut_subj       = nan(bndNode_Num, 2, subLen, length(expList));
+transIn_Len            = nan(bndNode_Num, 2, subLen, length(expList));
+transOut_Len           = nan(bndNode_Num, 2, subLen, length(expList));
 % ---------- Choice accuracy: one-hot measure ----------
-acc_transIn_subj  = zeros(bndNode_Num, 2, subLen, length(expList));
-acc_transOut_subj = zeros(bndNode_Num, 2, subLen, length(expList));
+acc_transIn_subj       = nan(bndNode_Num, 2, subLen, length(expList));
+acc_transOut_subj      = nan(bndNode_Num, 2, subLen, length(expList));
 % ---------- Choice accuracy: trajectory ----------
-acc_transIn_traj_subj  = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
-acc_transOut_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+acc_transIn_traj_subj  = nan(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+acc_transOut_traj_subj = nan(bndNode_Num, length(circle_list), 2, subLen, length(expList));
 % ---------- Quantify the distance between cue and distractors, distance between target and distractors ----------
-cue_dtr_distance_subj = cell(subLen, 4, length(expList)); % 4: with vs. without lure stimulus for boundary-to-within and boundary-to-boundary transitions
-tgt_dtr_distance_subj = cell(subLen, 4, length(expList));
+cue_dtr_distance_subj  = cell(subLen, 4, length(expList)); % 4: with vs. without lure stimulus for boundary-to-within and boundary-to-boundary transitions
+tgt_dtr_distance_subj  = cell(subLen, 4, length(expList));
 % ---------- Relative angles between the mouse and the target/lure-distractor/control ----------
-ang_transIn_traj_subj  = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
-ang_transOut_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+ang_transIn_subj       = nan(bndNode_Num, 2, subLen, length(expList));
+ang_transOut_subj      = nan(bndNode_Num, 2, subLen, length(expList));
+ang_transIn_traj_subj  = nan(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+ang_transOut_traj_subj = nan(bndNode_Num, length(circle_list), 2, subLen, length(expList));
 for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
     %% Subject
@@ -370,6 +372,7 @@ for iExp = 1 : length(expList)
                                 choiceId(iCount, iTp) = 0;
 
                             end
+                            angleMag_time(iCount, iTp, 1 : length(objAngs_stay_left)) = abs(objAngs_stay_left);
                         end
                     end
                 end
@@ -388,24 +391,21 @@ for iExp = 1 : length(expList)
             respRT_Col   = respRT_Col(dtNum == dtrCond, :);
             choiceId_ang = choiceId_ang(dtNum == dtrCond, :);
             choiceId     = choiceId(dtNum == dtrCond, :);
+        else
+            dt_nodes     = dt_nodes(:, 2 : end);
         end
 
         %% quantify the influence of lure stimulus on RTs and choice accuracy
-        % ------ boundary-to-within transition ------
-        RT_transIn   = zeros(bndNode_Num, 2); % 2: with vs. without lure stimulus
-        acc_transIn  = zeros(bndNode_Num, 2);
-        % ------ boundary-to-boundary transition ------
-        RT_transOut  = zeros(bndNode_Num, 2);
-        acc_transOut = zeros(bndNode_Num, 2);
-
-        minD_dtr_to_CueTgt = [];
         for i = 1 : bndNode_Num
             %% ---------transition: from boundary node to within node---------
             transIn_InDtr  = transIn_clsInDtr{i}; % transIn_clsInDtr{1} = [1, 2, 5; 1, 3, 5; 1, 4, 5];
             transIn_OutDtr = transIn_clsOutDtr{i};
+            % **************** 1. boundary-to-within transition: with lure ****************
             RTs_InDtr = [];
             acc_InDtr = [];
             acc_InDtr_traj = cell(1, length(circle_list));
+            ang_InDtr      = [];
+            ang_InDtr_traj = cell(1, length(circle_list));
             for j = 1 : size(transIn_InDtr, 1)
                 pair_j = transIn_InDtr(j, :);
                 dt_Yes = sum((dt_nodes == pair_j(3)), 2);
@@ -431,11 +431,34 @@ for iExp = 1 : length(expList)
                     cue_dtr_distance_subj{SubIdx, 1, iExp} = [cue_dtr_distance_subj{SubIdx, 1, iExp}; minD_cue_i];
                     tgt_dtr_distance_subj{SubIdx, 1, iExp} = [tgt_dtr_distance_subj{SubIdx, 1, iExp}; minD_tgt_i];
                 end
-                
+                % ------ quantify the relative radian between ang(mouse-target) and ang(mouse-lure/control) ------
+                ang_tgt      = angleMag_oneH(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1), 1);
+                ang_lure_tmp = angleMag_oneH(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1), 2 : end);
+                dt_nodes_tmp = dt_nodes(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1), :);
+                ang_lure_tmp = ang_lure_tmp(~isnan(ang_tgt), :);
+                dt_nodes_tmp = dt_nodes_tmp(~isnan(ang_tgt), :);
+                ang_tgt      = ang_tgt(~isnan(ang_tgt));
+                ang_lure     = nan(size(ang_lure_tmp, 1), 1);
+                for ll = 1 : size(ang_lure_tmp, 1)
+                    ang_lure_tmp_ll = ang_lure_tmp(ll, :);
+                    ang_lure(ll) = ang_lure_tmp_ll(find(dt_nodes_tmp(ll, :) == pair_j(3)));
+                end
+                ang_InDtr = [ang_InDtr; ang_tgt, ang_lure];
             end
+            if ~isempty(ang_InDtr)
+                ang_InDtr_diff = mod(ang_InDtr(:, 2) - ang_InDtr(:, 1) + pi, 2*pi) - pi;
+                ang_transIn_subj(i, 1, SubIdx, iExp) = atan2(mean(sin(ang_InDtr_diff)), mean(cos(ang_InDtr_diff)));
+            end
+
+            RT_transIn_subj(i, 1, SubIdx, iExp)  = nanmean(RTs_InDtr);
+            acc_transIn_subj(i, 1, SubIdx, iExp) = sum(acc_InDtr(:, 1)) / sum(acc_InDtr(:, 2));
+
+            % **************** 2. boundary-to-within transition: without lure ****************
             RTs_OutDtr = [];
             acc_OutDtr = [];
             acc_OutDtr_traj = cell(1, length(circle_list));
+            ang_OutDtr      = [];
+            ang_OutDtr_traj = cell(1, length(circle_list));
             for k = 1 : size(transIn_OutDtr, 1)
                 pair_k = transIn_OutDtr(k, :);
                 dt_Yes = sum((dt_nodes == pair_k(3)), 2);
@@ -461,11 +484,28 @@ for iExp = 1 : length(expList)
                     cue_dtr_distance_subj{SubIdx, 2, iExp} = [cue_dtr_distance_subj{SubIdx, 2, iExp}; minD_cue_i];
                     tgt_dtr_distance_subj{SubIdx, 2, iExp} = [tgt_dtr_distance_subj{SubIdx, 2, iExp}; minD_tgt_i];
                 end
+                % ------ quantify the relative radian between ang(mouse-target) and ang(mouse-lure/control) ------
+                ang_tgt      = angleMag_oneH(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1), 1);
+                ang_lure_tmp = angleMag_oneH(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1), 2 : end);
+                dt_nodes_tmp = dt_nodes(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1), :);
+                ang_lure_tmp = ang_lure_tmp(~isnan(ang_tgt), :);
+                dt_nodes_tmp = dt_nodes_tmp(~isnan(ang_tgt), :);
+                ang_tgt      = ang_tgt(~isnan(ang_tgt));
+                ang_lure     = nan(size(ang_lure_tmp, 1), 1);
+                for ll = 1 : size(ang_lure_tmp, 1)
+                    ang_lure_tmp_ll = ang_lure_tmp(ll, :);
+                    ang_lure(ll) = ang_lure_tmp_ll(find(dt_nodes_tmp(ll, :) == pair_k(3)));
+                end
+                ang_OutDtr = [ang_OutDtr; ang_tgt, ang_lure];
             end
-            RT_transIn(i, 1)  = nanmean(RTs_InDtr);
-            RT_transIn(i, 2)  = nanmean(RTs_OutDtr);
-            acc_transIn(i, 1) = sum(acc_InDtr(:, 1)) / sum(acc_InDtr(:, 2));
-            acc_transIn(i, 2) = sum(acc_OutDtr(:, 1)) / sum(acc_OutDtr(:, 2));
+            if ~isempty(ang_OutDtr)
+                ang_OutDtr_diff = mod(ang_OutDtr(:, 2) - ang_OutDtr(:, 1) + pi, 2*pi) - pi;
+                ang_transIn_subj(i, 2, SubIdx, iExp) = atan2(mean(sin(ang_OutDtr_diff)), mean(cos(ang_OutDtr_diff)));
+            end
+
+            RT_transIn_subj(i, 2, SubIdx, iExp)  = nanmean(RTs_OutDtr);
+            acc_transIn_subj(i, 2, SubIdx, iExp) = sum(acc_OutDtr(:, 1)) / sum(acc_OutDtr(:, 2));
+
             for iTp = 1 : length(circle_list)
                 % acc_transIn_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
                 % ------ with lure stimulus ------
@@ -476,15 +516,18 @@ for iExp = 1 : length(expList)
             end
 
             %%% trial length of each combination
-            transIn_Len(i, 1, SubIdx, iExp)  = length(RTs_InDtr);
-            transIn_Len(i, 2, SubIdx, iExp)  = length(RTs_OutDtr);
+            transIn_Len(i, 1, SubIdx, iExp) = length(RTs_InDtr);
+            transIn_Len(i, 2, SubIdx, iExp) = length(RTs_OutDtr);
 
             %% ---------transition: from boundary node to boundary node---------
             transOut_InDtr  = transOut_clsInDtr{i};
             transOut_OutDtr = transOut_clsOutDtr{i};
+            % **************** 3. boundary-to-boundary transition: with lure ****************
             RTs_InDtr = [];
             acc_InDtr = [];
             acc_InDtr_traj = cell(1, length(circle_list));
+            ang_InDtr      = [];
+            ang_InDtr_traj = cell(1, length(circle_list));
             for j = 1 : size(transOut_InDtr, 1)
                 pair_j = transOut_InDtr(j, :);
                 dt_Yes = sum((dt_nodes == pair_j(3)), 2);
@@ -510,11 +553,34 @@ for iExp = 1 : length(expList)
                     cue_dtr_distance_subj{SubIdx, 3, iExp} = [cue_dtr_distance_subj{SubIdx, 3, iExp}; minD_cue_i];
                     tgt_dtr_distance_subj{SubIdx, 3, iExp} = [tgt_dtr_distance_subj{SubIdx, 3, iExp}; minD_tgt_i];
                 end
+                % ------ quantify the relative radian between ang(mouse-target) and ang(mouse-lure/control) ------
+                ang_tgt      = angleMag_oneH(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1), 1);
+                ang_lure_tmp = angleMag_oneH(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1), 2 : end);
+                dt_nodes_tmp = dt_nodes(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1), :);
+                ang_lure_tmp = ang_lure_tmp(~isnan(ang_tgt), :);
+                dt_nodes_tmp = dt_nodes_tmp(~isnan(ang_tgt), :);
+                ang_tgt      = ang_tgt(~isnan(ang_tgt));
+                ang_lure     = nan(size(ang_lure_tmp, 1), 1);
+                for ll = 1 : size(ang_lure_tmp, 1)
+                    ang_lure_tmp_ll = ang_lure_tmp(ll, :);
+                    ang_lure(ll) = ang_lure_tmp_ll(find(dt_nodes_tmp(ll, :) == pair_j(3)));
+                end
+                ang_InDtr = [ang_InDtr; ang_tgt, ang_lure];
+            end
+            if ~isempty(ang_InDtr)
+                ang_InDtr_diff = mod(ang_InDtr(:, 2) - ang_InDtr(:, 1) + pi, 2*pi) - pi;
+                ang_transOut_subj(i, 1, SubIdx, iExp) = atan2(mean(sin(ang_InDtr_diff)), mean(cos(ang_InDtr_diff)));
             end
 
+            RT_transOut_subj(i, 1, SubIdx, iExp)  = nanmean(RTs_InDtr);
+            acc_transOut_subj(i, 1, SubIdx, iExp) = sum(acc_InDtr(:, 1)) / sum(acc_InDtr(:, 2));
+
+            % **************** 4. boundary-to-boundary transition: without lure ****************
             RTs_OutDtr = [];
             acc_OutDtr = [];
             acc_OutDtr_traj = cell(1, length(circle_list));
+            ang_OutDtr      = [];
+            ang_OutDtr_traj = cell(1, length(circle_list));
             for k = 1 : size(transOut_OutDtr, 1)
                 pair_k = transOut_OutDtr(k, :);
                 dt_Yes = sum((dt_nodes == pair_k(3)), 2);
@@ -540,11 +606,28 @@ for iExp = 1 : length(expList)
                     cue_dtr_distance_subj{SubIdx, 4, iExp} = [cue_dtr_distance_subj{SubIdx, 4, iExp}; minD_cue_i];
                     tgt_dtr_distance_subj{SubIdx, 4, iExp} = [tgt_dtr_distance_subj{SubIdx, 4, iExp}; minD_tgt_i];
                 end
+                % ------ quantify the relative radian between ang(mouse-target) and ang(mouse-lure/control) ------
+                ang_tgt      = angleMag_oneH(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1), 1);
+                ang_lure_tmp = angleMag_oneH(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1), 2 : end);
+                dt_nodes_tmp = dt_nodes(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1), :);
+                ang_lure_tmp = ang_lure_tmp(~isnan(ang_tgt), :);
+                dt_nodes_tmp = dt_nodes_tmp(~isnan(ang_tgt), :);
+                ang_tgt      = ang_tgt(~isnan(ang_tgt));
+                ang_lure     = nan(size(ang_lure_tmp, 1), 1);
+                for ll = 1 : size(ang_lure_tmp, 1)
+                    ang_lure_tmp_ll = ang_lure_tmp(ll, :);
+                    ang_lure(ll) = ang_lure_tmp_ll(find(dt_nodes_tmp(ll, :) == pair_k(3)));
+                end
+                ang_OutDtr = [ang_OutDtr; ang_tgt, ang_lure];
             end
-            RT_transOut(i, 1) = nanmean(RTs_InDtr);
-            RT_transOut(i, 2) = nanmean(RTs_OutDtr);
-            acc_transOut(i, 1) = sum(acc_InDtr(:, 1)) / sum(acc_InDtr(:, 2));
-            acc_transOut(i, 2) = sum(acc_OutDtr(:, 1)) / sum(acc_OutDtr(:, 2));
+            if ~isempty(ang_OutDtr)
+                ang_OutDtr_diff = mod(ang_OutDtr(:, 2) - ang_OutDtr(:, 1) + pi, 2*pi) - pi;
+                ang_transOut_subj(i, 2, SubIdx, iExp) = atan2(mean(sin(ang_OutDtr_diff)), mean(cos(ang_OutDtr_diff)));
+            end
+
+            RT_transOut_subj(i, 2, SubIdx, iExp)  = nanmean(RTs_OutDtr);
+            acc_transOut_subj(i, 2, SubIdx, iExp) = sum(acc_OutDtr(:, 1)) / sum(acc_OutDtr(:, 2));
+
             for iTp = 1 : length(circle_list)
                 % acc_transOut_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
                 % ------ with lure stimulus ------
@@ -555,18 +638,10 @@ for iExp = 1 : length(expList)
             end
 
             %%% trial length of each combination
-            transOut_Len(i, 1, SubIdx)  = length(RTs_InDtr);
-            transOut_Len(i, 2, SubIdx)  = length(RTs_OutDtr);
+            transOut_Len(i, 1, SubIdx, iExp) = length(RTs_InDtr);
+            transOut_Len(i, 2, SubIdx, iExp) = length(RTs_OutDtr);
 
         end
-        % ---------- One-hot measure ----------
-        RT_transIn_subj(:, :, SubIdx, iExp)   = RT_transIn;
-        RT_transOut_subj(:, :, SubIdx, iExp)  = RT_transOut;
-        acc_transIn_subj(:, :, SubIdx, iExp)  = acc_transIn;
-        acc_transOut_subj(:, :, SubIdx, iExp) = acc_transOut;
-        % ---------- Trajectory ----------
-        % see above
-
     end
 end
 
@@ -609,6 +684,9 @@ greeGrad = [0, 104, 55; ...
 % % ---------- Choice accuracy: trajectory ----------
 % acc_transIn_traj_subj  = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
 % acc_transOut_traj_subj = zeros(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+% ---------- Relative angles between the mouse and the target/lure-distractor/control ----------
+% ang_transIn_subj       = zeros(bndNode_Num, 2, subLen, length(expList));
+% ang_transOut_subj      = zeros(bndNode_Num, 2, subLen, length(expList));
 
 % ---------- average across the boundar nodes ----------
 % ------ RTs ------
@@ -622,6 +700,11 @@ acc_transOut_nodeAvg   = squeeze(nanmean(acc_transOut_subj, 1));
 % ------ choice accuracy trajectory ------
 acc_transIn_traj_nodeAvg  = squeeze(nanmean(acc_transIn_traj_subj, 1)); % length(circle_list) * 2 * subLen * length(expList)) 
 acc_transOut_traj_nodeAvg = squeeze(nanmean(acc_transOut_traj_subj, 1));
+% ------ relative angles ------
+ang_transIn_nodeAvg  = atan2(mean(sin(ang_OutDtr_diff)), mean(cos(ang_OutDtr_diff)));
+ang_transOut_nodeAvg = 
+
+ang_transOut_subj(i, 2, SubIdx, iExp) = 
 
 
 %% which data to plot
@@ -878,7 +961,9 @@ for iExp = 1 : 3
         disp(['t=', num2str(stats.tstat, '%4.3f'), ', p=', num2str(p, '%4.3f')])
     end
     xlim([0.6, 2.6]);
-    ylim([2, 2.5]);
+    if dtrCond ==4
+        ylim([2.5, 3.5]);
+    end
     if figKey == 0
         % ------For presentation------
         set(gca, 'LineWidth', 2);
