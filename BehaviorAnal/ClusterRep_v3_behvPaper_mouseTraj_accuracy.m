@@ -87,30 +87,36 @@ folder      = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 
 subLen = 24;
 %%% merge all trials
-angAcc_exp          = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
-lenData_exp         = zeros(subLen, length(circle_list), length(expList)); %% data length in each time point
-angAcc_dtr_exp      = zeros(subLen, length(circle_list), 3, length(expList));
+angAcc_exp          = nan(subLen, length(circle_list), length(expList)); %% accuracy in each time point
+lenData_exp         = nan(subLen, length(circle_list), length(expList)); %% data length in each time point
+angAcc_dtr_exp      = nan(subLen, length(circle_list), 3, length(expList));
+%%% choice accuracy trajectory for within- and between-transitions
+angAcc_traj_trans_exp = nan(subLen, 2, length(circle_list), length(expList)); % 2: within and between-transitions
+%%% choice accuracy trajectory for within- and between-transitions with
+%%% final correct or incorrect response separation
+angAcc_traj_trans_cor_exp = nan(subLen, 4, length(circle_list), length(expList)); % Col1-2: final response correct vs. incorrect for the within-transitions; Col2: ~ for between-transitions
+dtrNo_traj_trans_cor_exp  = nan(subLen, 4, length(circle_list), length(expList)); % Quantifying the distractor number for each condition
 %%% only for the Random trials
-angAcc_Rand_exp     = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
-lenData_Rand_exp    = zeros(subLen, length(circle_list), length(expList)); %% data length in each time point
-angAcc_dtr_Rand_exp = zeros(subLen, length(circle_list), 3, length(expList));
+angAcc_Rand_exp     = nan(subLen, length(circle_list), length(expList)); %% accuracy in each time point
+lenData_Rand_exp    = nan(subLen, length(circle_list), length(expList)); %% data length in each time point
+angAcc_dtr_Rand_exp = nan(subLen, length(circle_list), 3, length(expList));
 %%% only for the Hamiltonian trials
-angAcc_Hami_exp     = zeros(subLen, length(circle_list), length(expList)); %% accuracy in each time point
-lenData_Hami_exp    = zeros(subLen, length(circle_list), length(expList)); %% data length in each time point
-angAcc_dtr_Hami_exp = zeros(subLen, length(circle_list), 3, length(expList));
+angAcc_Hami_exp     = nan(subLen, length(circle_list), length(expList)); %% accuracy in each time point
+lenData_Hami_exp    = nan(subLen, length(circle_list), length(expList)); %% data length in each time point
+angAcc_dtr_Hami_exp = nan(subLen, length(circle_list), 3, length(expList));
 %%% accuracy for the within and between transitions for Random and Hamiltonian Walk separately
-acc_trans_walk      = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+acc_trans_walk      = nan(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
 %%% trial proportions of within-cluster and between-cluster transition under Random and Hamiltonian Walk
-trlPro_trans_walk   = zeros(subLen, 2, 2, length(expList)); 
+trlPro_trans_walk   = nan(subLen, 2, 2, length(expList)); 
 %%% accuracy for boundary-to-within and boundary-to-boundary transitions
 %%% with versus without lure stimulus
-acc_trans_lure      = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
-acc_trans_traj_lure = zeros(subLen, length(circle_list), 2, 2, length(expList));
+acc_trans_lure      = nan(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
+acc_trans_traj_lure = nan(subLen, length(circle_list), 2, 2, length(expList));
 % first 2:  with or without lure stimulus
 % second 2: boundary-to-within transition or bounary-to-boundary transition
 % third 3:  random or hamiltonian walk
-acc_trans_walk_lure      = zeros(subLen, 2, 2, 2, length(expList));
-acc_trans_walk_traj_lure = zeros(subLen, length(circle_list), 2, 2, 2, length(expList));
+acc_trans_walk_lure      = nan(subLen, 2, 2, 2, length(expList));
+acc_trans_walk_traj_lure = nan(subLen, length(circle_list), 2, 2, 2, length(expList));
 %%% learning curves
 % all trials together
 angAcc_ln_exp            = nan(subLen, BinL, length(expList));
@@ -402,6 +408,56 @@ for iExp = 1 : length(expList)
             acc_trans_walk_traj_lure(iSub, iTp, 2, 2, 2, iExp) = length(find(choiceId_i == 1 & nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 2)) / length(find(nodesLabel_iTp == 1 & lureIn_iTp == 0 & transStyle_iTp ~= 1 & rndHam_Col_iTp == 2));
         end
 
+        %% separating the trajectory based on within- vs. between-transitions & final response correct vs. incorrect
+        %%% choice accuracy trajectory for within- and between-transitions
+        % angAcc_traj_trans_exp = nan(subLen, 2, length(circle_list), length(expList)); % 2: within and between-transitions
+        %%% choice accuracy trajectory for within- and between-transitions with
+        %%% final correct or incorrect response separation
+        % angAcc_traj_trans_cor_exp = nan(subLen, 4, length(circle_list), length(expList)); % Col1-2: final response correct vs. incorrect for the within-transitions; Col2: ~ for between-transitions
+        % dtrNo_traj_trans_cor_exp  = nan(subLen, 4, length(circle_list), length(expList)); % Quantifying the distractor number for each condition
+
+        for iTp = 1 : length(circle_list)
+            choiceId_i      = choiceId(:, iTp);
+            choiceFinal_iTp = choiceId_ang;
+            transStyle_iTp  = transStyle;
+            dtrNo_iTp       = dtrNoCnt_iSub;
+
+            % ---------- within vs. between transitions ----------
+            del_trial       = isnan(choiceId_i);
+            transStyle_iiTp = transStyle_iTp(~del_trial);
+            choiceid_iiTp   = choiceId_i(~del_trial);
+            angAcc_traj_trans_exp(iSub, 1, iTp, iExp) = length(find(choiceid_iiTp == 1 & transStyle_iiTp == 1)) / length(find(transStyle_iiTp == 1));
+            angAcc_traj_trans_exp(iSub, 2, iTp, iExp) = length(find(choiceid_iiTp == 1 & transStyle_iiTp ~= 1)) / length(find(transStyle_iiTp ~= 1));
+
+            % ---------- within vs. between transitions for final response correct vs. incorrect ----------
+            del_trial        = isnan(choiceId_i) | isnan(choiceFinal_iTp);
+            transStyle_iiTp  = transStyle_iTp(~del_trial);
+            choiceid_iiTp    = choiceId_i(~del_trial);
+            choiceFinal_iiTp = choiceFinal_iTp(~del_trial);
+            angAcc_traj_trans_cor_exp(iSub, 1, iTp, iExp) = length(find(choiceid_iiTp == 1 & transStyle_iiTp == 1 & choiceFinal_iiTp == 1)) / length(find(transStyle_iiTp == 1 & choiceFinal_iiTp == 1));
+            angAcc_traj_trans_cor_exp(iSub, 2, iTp, iExp) = length(find(choiceid_iiTp == 1 & transStyle_iiTp == 1 & choiceFinal_iiTp == 0)) / length(find(transStyle_iiTp == 1 & choiceFinal_iiTp == 0));
+            angAcc_traj_trans_cor_exp(iSub, 3, iTp, iExp) = length(find(choiceid_iiTp == 1 & transStyle_iiTp ~= 1 & choiceFinal_iiTp == 1)) / length(find(transStyle_iiTp ~= 1 & choiceFinal_iiTp == 1));
+            angAcc_traj_trans_cor_exp(iSub, 4, iTp, iExp) = length(find(choiceid_iiTp == 1 & transStyle_iiTp ~= 1 & choiceFinal_iiTp == 0)) / length(find(transStyle_iiTp ~= 1 & choiceFinal_iiTp == 0));
+
+            % ---------- For each within vs. between & final response
+            % correct vs. incorrect condition, quantifying the distractor
+            % numbers ----------
+            dtrNo_iiTp = dtrNo_iTp(~del_trial);
+            if ~isempty(find(choiceid_iiTp == 1 & transStyle_iiTp == 1 & choiceFinal_iiTp == 1))
+                dtrNo_traj_trans_cor_exp(iSub, 1, iTp, iExp) = nanmean(dtrNo_iiTp(find(choiceid_iiTp == 1 & transStyle_iiTp == 1 & choiceFinal_iiTp == 1)) + 1);
+            end
+            if ~isempty(find(choiceid_iiTp == 1 & transStyle_iiTp == 1 & choiceFinal_iiTp == 0))
+                dtrNo_traj_trans_cor_exp(iSub, 2, iTp, iExp) = nanmean(dtrNo_iiTp(find(choiceid_iiTp == 1 & transStyle_iiTp == 1 & choiceFinal_iiTp == 0)) + 1);
+            end
+            if ~isempty(find(choiceid_iiTp == 1 & transStyle_iiTp ~= 1 & choiceFinal_iiTp == 1))
+                dtrNo_traj_trans_cor_exp(iSub, 3, iTp, iExp) = nanmean(dtrNo_iiTp(find(choiceid_iiTp == 1 & transStyle_iiTp ~= 1 & choiceFinal_iiTp == 1)) + 1);
+            end
+            if ~isempty(find(choiceid_iiTp == 1 & transStyle_iiTp ~= 1 & choiceFinal_iiTp == 0))
+                dtrNo_traj_trans_cor_exp(iSub, 4, iTp, iExp) = nanmean(dtrNo_iiTp(find(choiceid_iiTp == 1 & transStyle_iiTp ~= 1 & choiceFinal_iiTp == 0)) + 1);
+            end
+
+        end
+
         %% learning effect: accuracy in sliding bins at all sampling time points
         % ------ all trials together ------
         % angAcc_ln_exp            = nan(subLen, BinL, length(expList));
@@ -601,6 +657,100 @@ for iExp = 1 : length(expList)
     box off;
     ax = gca;
     %exportgraphics(ax, "Fig2e. learningCurve-LeafToHub.eps", "Resolution", 1000);
+end
+
+%% SI figure: choice accuracy trajectory for within- and between-transitions 
+% %%% choice accuracy trajectory for within- and between-transitions
+% angAcc_traj_trans_exp = nan(subLen, 2, length(circle_list), length(expList)); % 2: within and between-transitions
+% %%% choice accuracy trajectory for within- and between-transitions with
+% %%% final correct or incorrect response separation
+% angAcc_traj_trans_cor_exp = nan(subLen, 4, length(circle_list), length(expList)); % Col1-2: final response correct vs. incorrect for the within-transitions; Col2: ~ for between-transitions
+% dtrNo_traj_trans_cor_exp  = nan(subLen, 4, length(circle_list), length(expList)); % Quantifying the distractor number for each condition
+dataFlg = 2;
+if dataFlg == 1
+    angAcc_traj_i = angAcc_traj_trans_exp;
+elseif dataFlg == 2
+    angAcc_traj_i = angAcc_traj_trans_cor_exp;
+    dtrNo_traj_i  = dtrNo_traj_trans_cor_exp;
+end
+
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+chance_i = mean([1/2, 1/3, 1/4]);
+if dataFlg == 2
+    chance_i_time = 1 ./ squeeze(nanmean(dtrNo_traj_i, 1)); % 4 * length(circle_list) * length(expList)
+end
+for iExp = 1 : 3
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
+
+    % ------ plot the chance level first ------
+    if dataFlg == 2
+        for ii = 1 : 4
+            plot(circle_list, chance_i_time(ii, :, iExp), 'k--', 'LineWidth', 0.8); hold on;
+        end
+    end
+    for iTb = 1 : 2     % within vs. between transitions
+        if iTb == 1
+            transWord = 'within';
+            color_iTb = redGrad(2, :);
+        elseif iTb == 2
+            transWord = 'between';
+            color_iTb = blueGrad(2, :);
+        end
+        if size(angAcc_traj_i, 2) == 2
+            transData_traj_iTb = squeeze(angAcc_traj_i(:, iTb, :, iExp)); % subLen * length(circle_list) 
+        elseif size(angAcc_traj_i, 2) == 4
+            transData_traj_iTb = squeeze(angAcc_traj_i(:, (iTb - 1) * 2 + 1 : iTb * 2, :, iExp)); % subLen * 2* length(circle_list)
+        end
+        [accAvg_rOh, accSem_rOh] = Mean_and_Se(transData_traj_iTb, 1);  
+        accAvg_rOh = squeeze(accAvg_rOh);
+        accSem_rOh = squeeze(accSem_rOh);
+
+        lineLen = size(accAvg_rOh, 1);
+        for ilr = 1 : lineLen % final correct vs. incorrect response
+            if ilr == 1
+                LineSty = '-';
+            elseif ilr == 2
+                LineSty = ':';
+            end
+            shadedErrorBar(circle_list, accAvg_rOh(ilr, :), accSem_rOh(ilr, :), {'Color', color_iTb, 'MarkerFaceColor', color_iTb, 'LineStyle', LineSty, 'LineWidth', 2}, 0.5); hold on;
+        end
+    end
+    xlim([0, 0.8]);
+    ylim([0, 1]);
+    if dataFlg == 1
+        plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
+    end
+    if iExp == 1 || iExp == 3
+        plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
+    end
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 0 : 0.4 : 0.8, 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+    end
+    box off;
 end
 
 %% SI figure: learning curve for different distractors across trial bins (100 trials/bin)

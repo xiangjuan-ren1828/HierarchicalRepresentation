@@ -193,8 +193,7 @@ tgt_dtr_distance_subj  = cell(subLen, 4, length(expList));
 % ---------- Relative angles between the mouse and the target/lure-distractor/control ----------
 ang_transIn_subj       = nan(bndNode_Num, 2, subLen, length(expList));
 ang_transOut_subj      = nan(bndNode_Num, 2, subLen, length(expList));
-ang_transIn_traj_subj  = nan(bndNode_Num, length(circle_list), 2, subLen, length(expList));
-ang_transOut_traj_subj = nan(bndNode_Num, length(circle_list), 2, subLen, length(expList));
+
 for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
     %% Subject
@@ -458,7 +457,6 @@ for iExp = 1 : length(expList)
             acc_OutDtr = [];
             acc_OutDtr_traj = cell(1, length(circle_list));
             ang_OutDtr      = [];
-            ang_OutDtr_traj = cell(1, length(circle_list));
             for k = 1 : size(transIn_OutDtr, 1)
                 pair_k = transIn_OutDtr(k, :);
                 dt_Yes = sum((dt_nodes == pair_k(3)), 2);
@@ -527,7 +525,6 @@ for iExp = 1 : length(expList)
             acc_InDtr = [];
             acc_InDtr_traj = cell(1, length(circle_list));
             ang_InDtr      = [];
-            ang_InDtr_traj = cell(1, length(circle_list));
             for j = 1 : size(transOut_InDtr, 1)
                 pair_j = transOut_InDtr(j, :);
                 dt_Yes = sum((dt_nodes == pair_j(3)), 2);
@@ -701,11 +698,12 @@ acc_transOut_nodeAvg   = squeeze(nanmean(acc_transOut_subj, 1));
 acc_transIn_traj_nodeAvg  = squeeze(nanmean(acc_transIn_traj_subj, 1)); % length(circle_list) * 2 * subLen * length(expList)) 
 acc_transOut_traj_nodeAvg = squeeze(nanmean(acc_transOut_traj_subj, 1));
 % ------ relative angles ------
-ang_transIn_nodeAvg  = atan2(mean(sin(ang_OutDtr_diff)), mean(cos(ang_OutDtr_diff)));
-ang_transOut_nodeAvg = 
-
-ang_transOut_subj(i, 2, SubIdx, iExp) = 
-
+ang_transIn_nodeAvg  = squeeze(...
+    atan2(mean(sin(ang_transIn_subj), 1), ...
+          mean(cos(ang_transIn_subj), 1)));
+ang_transOut_nodeAvg = squeeze(...
+    atan2(mean(sin(ang_transOut_subj), 1), ...
+          mean(cos(ang_transOut_subj), 1)));
 
 %% which data to plot
 dataFlg = 2;
@@ -981,7 +979,100 @@ for iExp = 1 : 3
     box off;
 end
 
+%% The relative angle difference between mouse-target and mouse-lure/control
+% ---------- Relative angles between the mouse and the target/lure-distractor/control ----------
+% ang_transIn_subj     = zeros(bndNode_Num, 2, subLen, length(expList));
+% ang_transOut_subj    = zeros(bndNode_Num, 2, subLen, length(expList));
+% ------ relative angles ------
+% ang_transIn_nodeAvg  = squeeze(...
+%     atan2(mean(sin(ang_transIn_subj), 1), ...
+%           mean(cos(ang_transIn_subj), 1)));
+% ang_transOut_nodeAvg = squeeze(...
+%     atan2(mean(sin(ang_transOut_subj), 1), ...
+%           mean(cos(ang_transOut_subj), 1)));
 
+% figKey = 1;
+% if figKey == 0
+%     barLineWid = 2;
+%     errLineWid = 3;
+%     refLineWid = 1;
+%     indvLineW  = 1;
+%     markSize   = 6;
+% elseif figKey == 1
+%     barLineWid = 1;
+%     errLineWid = 2;
+%     refLineWid = 0.5;
+%     indvLineW  = 0.4;
+%     markSize   = 4.5;
+% end
+% for iExp = 1 : 3
+%     disp(['---------- ', expList{iExp}, ' ----------']);
+%     figure('Position', [100 100 260 120]), clf;
+% 
+%     barPos = [1, 1.5; 1.7, 2.2];
+%     for iTb = 1 : 2     % 'transition from boundary node to within node vs. from boundary to boundary'
+%         if iTb == 1
+%             transWord     = 'boundary-to-within';
+%             transData_iTb = ang_transIn_nodeAvg(:, :, iExp);
+%         elseif iTb == 2
+%             transWord     = 'boundary-to-boundary';
+%             transData_iTb = ang_transOut_nodeAvg(:, :, iExp);
+%         end
+%         transData_iTb = transData_iTb'; % subLen * 2 (with vs. without lure stimulus)
+%         % Number of valid samples per condition
+%         N = sum(~isnan(transData_iTb), 1);   % 1 × 2
+% 
+%         % Circular mean (NaN-safe)
+%         sinMean = mean(sin(transData_iTb), 1, 'omitnan');
+%         cosMean = mean(cos(transData_iTb), 1, 'omitnan');
+% 
+%         circMean_sub = atan2(sinMean, cosMean);
+% 
+%         % Resultant vector length
+%         R = sqrt(sinMean.^2 + cosMean.^2);
+% 
+%         % Circular SEM (uses effective N)
+%         circSEM = sqrt(-2 * log(R)) ./ sqrt(N);
+% 
+%         circMean_sub = squeeze(circMean_sub);   % 1 × 2
+%         circSEM      = squeeze(circSEM);        % 1 × 2
+% 
+%         barPos_i = barPos(iTb, :);
+%         %%% line plot
+%         plot(barPos_i, transData_iTb, 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', indvLineW); hold on;
+%         plot(barPos_i, circMean_sub, 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+%         for ilr = 1 : 2 % 'lure distractor exists vs. none'
+%             if ilr == 1
+%                 colorTmp = [0, 0, 0]; % with lure distractor
+%             elseif ilr == 2
+%                 colorTmp = [1, 1, 1]; % without lure distractor
+%             end
+%             errorbar(barPos_i(ilr), circMean_sub(ilr), circSEM(ilr), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+%             plot(barPos_i(ilr), circMean_sub(ilr), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+%         end
+%         % ------ Statistical tests ------
+%         disp(['======== ', transWord, ': with vs. without lure stimulus ========']);
+%         [h, p, ci, stats] = ttest(transData_iTb(:, 1), transData_iTb(:, 2))
+%         disp(['t=', num2str(stats.tstat, '%4.3f'), ', p=', num2str(p, '%4.3f')])
+%     end
+%     xlim([0.6, 2.6]);
+%     %ylim([0, 1]);
+%     if figKey == 0
+%         % ------For presentation------
+%         set(gca, 'LineWidth', 2);
+%         set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+%         set(gca, 'XTick', '', 'XTickLabel', '');
+%         set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+%     elseif figKey == 1
+%         % ------For Adobe Illustrator------
+%         set(gca, 'LineWidth', 0.8);
+%         set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+%         set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+%         %set(gca, 'YTick', [0, 0.5, 1], 'YTickLabel', '');
+%     end
+%    
+%     box off;
+% end
 
 
 
