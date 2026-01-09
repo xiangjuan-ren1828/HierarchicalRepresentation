@@ -792,7 +792,7 @@ for iExp = 1 : 3
         end
 
     elseif dataFlg == 2 % choice accuracy
-        ylim([0, 1]);
+        ylim([0.05, 0.8]);
         plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
         if figKey == 0
             % ------For presentation------
@@ -805,11 +805,14 @@ for iExp = 1 : 3
             set(gca, 'LineWidth', 0.8);
             set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
             set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
-            set(gca, 'YTick', [0, 0.5, 1], 'YTickLabel', '');
+            set(gca, 'YTick', [0.05, 0.2 : 0.2 : 0.8], 'YTickLabel', '');
         end
     end
    
     box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-oneHot-lure.png'];
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% BehavioralPaper, Figure xx: influence of lure stimulus on choice accuracy trajectory
@@ -864,7 +867,7 @@ for iExp = 1 : 3
         end
     end
     xlim([0, 0.8]);
-    ylim([0, 1]);
+    ylim([0, 0.6]);
     plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
     if iExp == 1 || iExp == 3
         plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
@@ -880,9 +883,12 @@ for iExp = 1 : 3
         set(gca, 'LineWidth', 0.8);
         set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
         set(gca, 'XTick', [0, 0.4, 0.8], 'XTickLabel', '');
-        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+        set(gca, 'YTick', [0, 0.3, 0.6], 'YTickLabel', '');
     end
     box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-learning-lure.png'];
+    %exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% quantify the distance between the cue and non-lure/control stimulus or distance between the target and non-lure/control stimulus
@@ -973,10 +979,12 @@ for iExp = 1 : 3
         set(gca, 'LineWidth', 0.8);
         set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
         set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
-        %set(gca, 'YTick', [0, 0.5, 1], 'YTickLabel', '');
+        set(gca, 'YTick', [2.5, 3, 3.5], 'YTickLabel', '');
     end
-   
     box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-distance-lure.png'];
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% The relative angle difference between mouse-target and mouse-lure/control

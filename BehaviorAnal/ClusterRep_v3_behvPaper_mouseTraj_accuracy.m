@@ -656,7 +656,8 @@ for iExp = 1 : length(expList)
     set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
     box off;
     ax = gca;
-    %exportgraphics(ax, "Fig2e. learningCurve-LeafToHub.eps", "Resolution", 1000);
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-traj.png'];
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% SI figure: choice accuracy trajectory for within- and between-transitions 
@@ -751,6 +752,13 @@ for iExp = 1 : 3
         set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
     end
     box off;
+    ax = gca;
+    if dataFlg == 1
+        save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-traj-within-between.png'];
+    elseif dataFlg == 2
+        save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-traj-within-between-finalResp.png'];
+    end
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% SI figure: learning curve for different distractors across trial bins (100 trials/bin)
@@ -823,6 +831,9 @@ for iExp = 1 : length(expList)
         set(gca, 'YTick', 0.2 : 0.2 : 0.8, 'YTickLabel', '');
     end
     box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-learning-dtr.png'];
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% BhevaiorPaper Figure xx: learning curve for within and between transitions across trial bins (100 trials/bin)
@@ -858,7 +869,7 @@ for iExp = 1 : length(expList)
     end
 end
 for iExp = 1 : length(expList)
-    figure('Position', [100 100 260 160]), clf;
+    figure('Position', [100 100 260 120]), clf;
     hold on;
     xlim([0.5, BinL+0.5]);
     ylim([0.2, 0.8]);
@@ -896,6 +907,9 @@ for iExp = 1 : length(expList)
         set(gca, 'YTick', 0.2 : 0.2 : 0.8, 'YTickLabel', '');
     end
     box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-learning-trans.png'];
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% BehaviorPaper Figure xx: learning curve for within and between transitions in Random and Hamiltonian Walk across trial bins (100 trials/bin)
@@ -917,7 +931,7 @@ end
 nWalks = 2; % Random and Hamiltonian Walk
 nTrans = 2; % within and Between-cluster transition
 for iExp = 1 : length(expList)
-    figure('Position', [100 100 260 160]), clf;
+    figure('Position', [100 100 260 120]), clf;
     hold on;
     xlim([0.5, BinL+0.5]);
     ylim([0.2, 0.8]);
@@ -954,6 +968,9 @@ for iExp = 1 : length(expList)
         set(gca, 'YTick', 0.2 : 0.2 : 0.8, 'YTickLabel', '');
     end
     box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-learning-trans-walk.png'];
+    %exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% BehaviorPaper Figure xx: accuracy for the within- and between-transitions in Random and Hamiltonian Walk trials separately
@@ -1024,6 +1041,9 @@ for iExp = 1 : 3
         set(gca, 'YTick', [0.05, 0.2 : 0.2 : 0.8], 'YTickLabel', '');
     end
     box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-oneHot-trans-walk.png'];
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 
 end
 
