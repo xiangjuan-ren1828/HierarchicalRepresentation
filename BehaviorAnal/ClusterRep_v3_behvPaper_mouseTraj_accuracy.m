@@ -620,7 +620,7 @@ for iExp = 1 : length(expList)
     end
 end
 
-%% SI figure: plotting the accuracy time curves
+%% SI figure: plotting the accuracy time curves across 3 studies in separate figures
 % angAcc_exp = zeros(subLen, length(circle_list), nExp); %% accuracy in each time point
 LineSty  = '-';
 colorTmp = colorSet(7, :);
@@ -659,6 +659,33 @@ for iExp = 1 : length(expList)
     save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-traj.png'];
 %     exportgraphics(ax, save_name, 'Resolution', 600);
 end
+
+%% SI figure: plotting the accuracy time curves across 3 studies in the same figure
+LineSty_list = {'-', '-.', ':'};
+colorExp = [251, 154, 153; ...
+            178, 223, 138; ...
+            166, 206, 227] ./ 255;
+figure('Position', [100 100 280 160]), clf;
+for iExp = 1 : length(expList)
+    LineSty = LineSty_list{iExp};
+    
+    angAcc_exp_i = angAcc_exp(:, :, iExp);
+    [acc_avg, acc_sem] = Mean_and_Se(angAcc_exp_i, 1);
+    shadedErrorBar(circle_list, acc_avg, acc_sem, {'Color', colorExp(iExp, :), 'MarkerFaceColor', colorExp(iExp, :), 'LineStyle', LineSty, 'LineWidth', 3}, 0.5); hold on;
+end
+ylim([0, 1]);
+plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'k--', 'LineWidth', 0.8); hold on;
+plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
+axis xy;    
+set(gca, 'LineWidth', 0.8);
+set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+set(gca, 'XTick', 0 : 0.4 : 1.5, 'XTickLabel', '');
+set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+box off;
+ax = gca;
+save_name = 'LearningCuves.png';
+exportgraphics(ax, save_name, 'Resolution', 600);
+
 
 %% SI figure: choice accuracy trajectory for within- and between-transitions 
 % %%% choice accuracy trajectory for within- and between-transitions

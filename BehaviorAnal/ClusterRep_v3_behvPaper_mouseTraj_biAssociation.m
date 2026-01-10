@@ -97,8 +97,8 @@ folder      = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 subLen    = 24;
 nBef      = 20;
 nExp      = length(expList);
-nTrans    = 3; %% within-trans, between-trans, and all
-transWord = {'within', 'between', 'all'};
+nTrans    = 7; %% within-trans, between-trans, random-walk+within-trans, random-walk+between-trans, hamiltonian-walk+within-trans, hamiltonian-walk+betwee-trans
+transWord = {'within', 'between', 'rand-within', 'rand-between', 'ham-within', 'ham-between', 'all'};
 acc_condition_group      = nan(subLen, nBef, nTrans, nExp); % nBef conditions
 acc_nTgt_condition_group = nan(subLen, nBef, nTrans, nExp);
 acc_rev_condition_group  = nan(subLen, nBef, nTrans, nExp); 
@@ -221,7 +221,7 @@ for iExp = 1 : nExp
         %%% extract the angles
         choiceId_ang  = nan(length(from_nodes), 1);
         dtrNoCnt_iSub = nan(length(from_nodes), 1);
-        iCount   = 1;
+        iCount = 1;
         for iBlock = 1 : nBlock
             blc_i = find((subNo_col == (iSub - 1)) & (blockNo_col == (iBlock - 1)));
             trlNo_i   = trialNo_col(blc_i);
@@ -297,9 +297,21 @@ for iExp = 1 : nExp
 
                     elseif transStyle_i == 0 %% between-trans
                         acc_condition{2, condIdx} = [acc_condition{2, condIdx}; choiceId_ang(iT)];
-
                     end
-                    acc_condition{3, condIdx} = [acc_condition{3, condIdx}; choiceId_ang(iT)];
+                        
+                    if transStyle_i == 1 && rndHam_i == 1 %% within-trans & random-walk
+                        acc_condition{3, condIdx} = [acc_condition{3, condIdx}; choiceId_ang(iT)];
+
+                    elseif transStyle_i == 0 && rndHam_i == 1 %% between-trans & random-walk
+                        acc_condition{4, condIdx} = [acc_condition{4, condIdx}; choiceId_ang(iT)];
+
+                    elseif transStyle_i == 1 && rndHam_i == 2 %% within-trans & hamiltonian-walk
+                        acc_condition{5, condIdx} = [acc_condition{5, condIdx}; choiceId_ang(iT)];
+
+                    elseif transStyle_i == 0 && rndHam_i == 2 %% between-trans & hamiltonian-walk
+                        acc_condition{6, condIdx} = [acc_condition{6, condIdx}; choiceId_ang(iT)];
+                    end
+                    acc_condition{7, condIdx} = [acc_condition{7, condIdx}; choiceId_ang(iT)];
                 end
             end
             %%% ----------For non-target----------
@@ -310,14 +322,26 @@ for iExp = 1 : nExp
                    (isempty(tgtFind) || (tgtFind(end) < nonFind_nearest))
                     condIdx = length(from_hty) - nonFind_nearest;
                     if condIdx <= nBef
-                        if transStyle_i == 1    %% within-trans
+                        if transStyle_i == 1     %% within-trans
                             acc_nTgt_condition{1, condIdx} = [acc_nTgt_condition{1, condIdx}; choiceId_ang(iT)];
 
                         elseif transStyle_i == 0 %% between-trans
                             acc_nTgt_condition{2, condIdx} = [acc_nTgt_condition{2, condIdx}; choiceId_ang(iT)];
-
                         end
-                        acc_nTgt_condition{3, condIdx} = [acc_nTgt_condition{3, condIdx}; choiceId_ang(iT)];
+
+                        if transStyle_i == 1 && rndHam_i == 1     %% within-trans & random-walk
+                            acc_nTgt_condition{3, condIdx} = [acc_nTgt_condition{3, condIdx}; choiceId_ang(iT)];
+
+                        elseif transStyle_i == 0 && rndHam_i == 1 %% between-trans & random-walk
+                            acc_nTgt_condition{4, condIdx} = [acc_nTgt_condition{4, condIdx}; choiceId_ang(iT)];
+
+                        elseif transStyle_i == 1 && rndHam_i == 2 %% within-trans & hamiltonian-walk
+                            acc_nTgt_condition{5, condIdx} = [acc_nTgt_condition{5, condIdx}; choiceId_ang(iT)];
+
+                        elseif transStyle_i == 0 && rndHam_i == 2 %% between-trans & hamiltonian-walk
+                            acc_nTgt_condition{6, condIdx} = [acc_nTgt_condition{6, condIdx}; choiceId_ang(iT)];
+                        end
+                        acc_nTgt_condition{7, condIdx} = [acc_nTgt_condition{7, condIdx}; choiceId_ang(iT)];
                     end
                 end
             end
@@ -325,10 +349,10 @@ for iExp = 1 : nExp
             %% to_i occurs before and associated with from_i
             %toFind_ass = find((from_hty == from_i & to_hty == to_i) | (from_hty == to_i & to_hty == from_i));
             %toFind_ass(end) = []; % remove the self finding
-            tgtFind_ass  = find((from_hty == to_i & to_hty == from_i));
-            tgtFind_sim  = find((from_hty == from_i & to_hty == to_i));
+            tgtFind_ass = find((from_hty == to_i & to_hty == from_i));
+            tgtFind_sim = find((from_hty == from_i & to_hty == to_i));
             tgtFind_sim(end) = [];
-            nonFind_ass  = find(~(from_hty == to_i & to_hty == from_i)); %find((from_hty ~= to_i & to_hty ~= from_i));
+            nonFind_ass = find(~(from_hty == to_i & to_hty == from_i)); %find((from_hty ~= to_i & to_hty ~= from_i));
             nonFind_ass(end) = [];
             %%% ----------For target----------
             if ~isempty(tgtFind_ass)
@@ -336,14 +360,26 @@ for iExp = 1 : nExp
                 if isempty(tgtFind_sim) || (tgtFind_sim(end) < tgtFind_ass_nearest)
                     condIdx = length(from_hty) - tgtFind_ass_nearest;
                     if condIdx <= nBef
-                        if transStyle_i == 1     %% within-trans
+                        if transStyle_i == 1    %% within-trans 
                             acc_rev_condition{1, condIdx} = [acc_rev_condition{1, condIdx}; choiceId_ang(iT)];
 
-                        elseif transStyle_i == 0 %% between-trans
+                        elseif transStyle_i == 0 %% between-trans 
                             acc_rev_condition{2, condIdx} = [acc_rev_condition{2, condIdx}; choiceId_ang(iT)];
-
                         end
-                        acc_rev_condition{3, condIdx} = [acc_rev_condition{3, condIdx}; choiceId_ang(iT)]; % not differentiate 4 transition conditions
+
+                        if transStyle_i == 1 && rndHam_i == 1     %% within-trans & random-walk
+                            acc_rev_condition{3, condIdx} = [acc_rev_condition{3, condIdx}; choiceId_ang(iT)];
+
+                        elseif transStyle_i == 0 && rndHam_i == 1 %% between-trans & random-walk
+                            acc_rev_condition{4, condIdx} = [acc_rev_condition{4, condIdx}; choiceId_ang(iT)];
+
+                        elseif transStyle_i == 1 && rndHam_i == 2 %% within-trans & hamiltonian-walk
+                            acc_rev_condition{5, condIdx} = [acc_rev_condition{5, condIdx}; choiceId_ang(iT)];
+
+                        elseif transStyle_i == 0 && rndHam_i == 2 %% between-trans & hamiltonian-walk
+                            acc_rev_condition{6, condIdx} = [acc_rev_condition{6, condIdx}; choiceId_ang(iT)];
+                        end
+                        acc_rev_condition{7, condIdx} = [acc_rev_condition{7, condIdx}; choiceId_ang(iT)]; % not differentiate 4 transition conditions
                     end
 
                 end
@@ -354,20 +390,32 @@ for iExp = 1 : nExp
                 if (isempty(tgtFind_sim) || (tgtFind_sim(end) < nonFind_ass_nearest)) && ...
                    (isempty(tgtFind_ass) || (tgtFind_ass(end) < nonFind_ass_nearest))
                     condIdx = length(from_hty) - nonFind_ass_nearest;
-                    if condIdx <= nBef
-                        if transStyle_i == 1     %% within-trans 
+                    if condIdx <= nBef 
+                        if transStyle_i == 1     %% within-trans & random-walk
                             acc_rev_nTgt_condition{1, condIdx} = [acc_rev_nTgt_condition{1, condIdx}; choiceId_ang(iT)];
 
-                        elseif transStyle_i == 0 %% between-trans 
+                        elseif transStyle_i == 0 %% between-trans & random-walk
                             acc_rev_nTgt_condition{2, condIdx} = [acc_rev_nTgt_condition{2, condIdx}; choiceId_ang(iT)];
-
                         end
-                        acc_rev_nTgt_condition{3, condIdx} = [acc_rev_nTgt_condition{3, condIdx}; choiceId_ang(iT)]; % not differentiate 4 transition conditions
+
+                        if transStyle_i == 1 && rndHam_i == 1     %% within-trans & random-walk
+                            acc_rev_nTgt_condition{3, condIdx} = [acc_rev_nTgt_condition{3, condIdx}; choiceId_ang(iT)];
+
+                        elseif transStyle_i == 0 && rndHam_i == 1 %% between-trans & random-walk
+                            acc_rev_nTgt_condition{4, condIdx} = [acc_rev_nTgt_condition{4, condIdx}; choiceId_ang(iT)];
+
+                        elseif transStyle_i == 1 && rndHam_i == 2 %% within-trans & hamiltonian-walk
+                            acc_rev_nTgt_condition{5, condIdx} = [acc_rev_nTgt_condition{5, condIdx}; choiceId_ang(iT)];
+
+                        elseif transStyle_i == 0 && rndHam_i == 2 %% between-trans & hamiltonian-walk
+                            acc_rev_nTgt_condition{6, condIdx} = [acc_rev_nTgt_condition{6, condIdx}; choiceId_ang(iT)];
+                        end
+                        acc_rev_nTgt_condition{7, condIdx} = [acc_rev_nTgt_condition{7, condIdx}; choiceId_ang(iT)]; % not differentiate 4 transition conditions
                     end
                 end
             end
 
-            %% ---------------temporal intervals of last occurence---------------
+            %% ---------------temporal intervals of last occurrence---------------
             % When was the last time the transition pair appeared
             % bidirection vs. non-direction
             tgtFind_nonD = find((from_hty == from_i & to_hty == to_i) | (from_hty == to_i & to_hty == from_i)); % nondirectional
@@ -378,12 +426,17 @@ for iExp = 1 : nExp
                 tgtFind_nonD_nearest = tgtFind_nonD(end);
                 condIdx = length(from_hty) - tgtFind_nonD_nearest;
 
-                if transStyle_i == 1     %% within-trans
+                if transStyle_i == 1 && rndHam_i == 1     %% within-trans & random-walk
                     tempInt_i = [condIdx, 1, iT];
 
-                elseif transStyle_i == 0 %% between-trans
+                elseif transStyle_i == 0 && rndHam_i == 1 %% between-trans & random-walk
                     tempInt_i = [condIdx, 2, iT];
 
+                elseif transStyle_i == 1 && rndHam_i == 2 %% within-trans & hamiltonian-walk
+                    tempInt_i = [condIdx, 3, iT];
+
+                elseif transStyle_i == 0 && rndHam_i == 2 %% between-trans & hamiltonian-walk
+                    tempInt_i = [condIdx, 4, iT];
                 end
                 tempInt_nonD_group{iSub, iExp} = [tempInt_nonD_group{iSub, iExp}; tempInt_i];
             end
@@ -391,12 +444,17 @@ for iExp = 1 : nExp
             if ~isempty(tgtFind_binD)
                 tgtFind_binD_nearest = tgtFind_binD(end);
                 condIdx = length(from_hty) - tgtFind_binD_nearest;
-                if transStyle_i == 1     %% within-trans
+                if transStyle_i == 1 && rndHam_i == 1     %% within-trans & random-walk
                     tempInt_i = [condIdx, 1, iT];
 
-                elseif transStyle_i == 0 %% between-trans
+                elseif transStyle_i == 0 && rndHam_i == 1 %% between-trans & random-walk
                     tempInt_i = [condIdx, 2, iT];
 
+                elseif transStyle_i == 1 && rndHam_i == 2 %% within-trans & hamiltonian-walk
+                    tempInt_i = [condIdx, 3, iT];
+
+                elseif transStyle_i == 0 && rndHam_i == 2 %% between-trans & hamiltonian-walk
+                    tempInt_i = [condIdx, 4, iT];
                 end
                 tempInt_binD_group{iSub, iExp} = [tempInt_binD_group{iSub, iExp}; tempInt_i];
             end
@@ -461,27 +519,7 @@ elseif accFlg == 2
     non_plot = acc_rev_nTgt_condition_group;
 end
 
-%% plotting target in different conditions in a same figure
-for iExp = 1 : nExp
-    acc_plot_iExp = acc_plot(:, :, :, iExp);
-    figure('Position', [100 100 380 240]), clf;
-    [acc_avg, acc_sem] = Mean_and_Se(acc_plot_iExp, 1);
-    acc_avg = squeeze(acc_avg); % nBef * nTrans
-    acc_sem = squeeze(acc_sem);
-    for iTrans = nTrans % within-trans and between-trans
-        errorbar(1 : 1 : nBef, acc_avg(:, iTrans), acc_sem(:, iTrans), 'Color', colorComp(iTrans, :), 'LineStyle', '-', 'LineWidth', 2); hold on;
-        plot(1 : 1 : nBef, acc_avg(:, iTrans), 'Marker', '.', 'MarkerSize', 20, 'Color', colorComp(iTrans, :), 'LineStyle', 'none'); hold on;
-    end
-    %ylim([0, 1]);
-    %ylimit = ylim;
-    plot(xlim, [0.5, 0.5], 'k--', 'LineWidth', 1); hold on;
-    plot(xlim, [(1/2+1/3+1/4)/3, (1/2+1/3+1/4)/3], 'k--', 'LineWidth', 1); hold on;
-    set(gca, 'LineWidth', 2);
-    set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
-    box off;
-end
-
-%% plotting target and non-target in each condition
+%% SI figure: plotting target and non-target in each condition
 for iExp = 3% : nExp
     acc_plot_iExp = acc_plot(:, :, :, iExp);
     non_plot_iExp = non_plot(:, :, :, iExp);
@@ -513,5 +551,87 @@ for iExp = 3% : nExp
     %ylimit = ylim;
 end
 
+%% BehaviorPaper Figure xx: within vs. between transitions, bi-directional associations, if X-Y happens in the current trial, whether Y-X/non Y-X in the laster trial has a influence
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+
+% acc_trans_walk = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+barPos   = [1, 1.5; 1.7, 2.2];
+chance_i = mean([1/2, 1/3, 1/4]);
+
+iPrev = 1;
+acc_plot_nExp = squeeze(acc_plot(:, iPrev, 1 : 2, :)); % nan(subLen, nTrans, nExp); nTrans: within vs. between transition
+non_plot_nExp = squeeze(non_plot(:, iPrev, 1 : 2, :));
+for iExp = 1 : nExp
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
+
+    for i_tp = 1 : 2 % within vs. between-transition
+        if i_tp == 1
+            transWord = 'Within-trans';
+        elseif i_tp == 2
+            transWord = 'Between-trans';
+        end
+        barPos_i = barPos(i_tp, :);
+
+        ass_plot = nan(size(acc_plot_nExp, 1), 2); % with the reversed directional transition happening vs. not
+        ass_plot(:, 1) = acc_plot_nExp(:, i_tp, iExp);
+        ass_plot(:, 2) = non_plot_nExp(:, i_tp, iExp);
+        [assAvg, assSem] = Mean_and_Se(ass_plot, 1);
+
+        %%% line plot
+        plot(barPos_i, ass_plot, 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', indvLineW); hold on;
+        plot(barPos_i, assAvg, 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for i_pre = 1 : 2 % with the reversed directional transition happening vs. not
+            if i_pre == 1
+                preWord  = 'Y-X before';
+                colorTmp = [0, 0, 0];
+            elseif i_pre == 2
+                preWord  = 'Y-X none';
+                colorTmp = [1, 1, 1];
+            end
+            errorbar(barPos_i(i_pre), assAvg(i_pre), assSem(i_pre), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+            plot(barPos_i(i_pre), assAvg(i_pre), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', colorTmp, 'LineStyle', '-'); hold on;
+        end
+        % ------ Statistical tests ------
+        disp(['======== ', transWord, '-Y-X before vs. Y-X none ========']);
+        [h, p, ci, stats] = ttest(ass_plot(:, 1), ass_plot(:, 2))
+    end
+    xlim([0.6, 2.6]);
+    ylim([0, 1]);
+    plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+    end
+    box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-biAss-trans.png'];
+    exportgraphics(ax, save_name, 'Resolution', 600);
+
+end
+
+%% SI figure: within vs. between transitions in Random and Hamiltonian Walks, bi-directional associations, if X-Y happens in the current trial, whether Y-X/non Y-X in the laster trial has a influence
 
 
