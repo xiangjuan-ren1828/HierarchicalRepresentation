@@ -85,7 +85,9 @@ transTpAcc_lure = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' de
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 RTsubj              = zeros(nTrials, subLen, length(expList));
 RTtransTp           = zeros(subLen, 2, length(expList));
-RTtransTp_type      = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+RTtransTp_type        = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+RTtransTp_type_first  = zeros(subLen, 2, 2, length(expList));
+RTtransTp_type_second = zeros(subLen, 2, 2, length(expList));
 RTtransTp_Blc       = zeros(subLen, 2, BinL, length(expList));
 RTtransTp_type_Blc  = cell(length(expList), 2); % random vs. hamiltonian walks
 RTtransTp_lure      = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'lure distractor exists vs. none' and 'transition from boundary node to within node vs. from boundary to boundary'
@@ -273,12 +275,26 @@ for iExp = 1 : length(expList)
         %%
         RTtransTp(SubIdx, 1, iExp) = mean(respRT_Col(find(transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))); %% Pay attention: errorIdx_Col includes error and timeout trials
         RTtransTp(SubIdx, 2, iExp) = mean(respRT_Col(find(transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1)));
+        %%% ------ All trials ------
         %%% wtihin vs. between cluster transition RTs separately for random and
         %%% hamiltonian walk
-        RTtransTp_type(SubIdx, 1, 1, iExp) =  mean(respRT_Col(find(transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1))); %% rndHam_Col == 1: random trial
-        RTtransTp_type(SubIdx, 1, 2, iExp) =  mean(respRT_Col(find(transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2))); %% rndHam_Col == 2: hamiltonian trial
-        RTtransTp_type(SubIdx, 2, 1, iExp) =  mean(respRT_Col(find(transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1)));
-        RTtransTp_type(SubIdx, 2, 2, iExp) =  mean(respRT_Col(find(transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2)));
+        RTtransTp_type(SubIdx, 1, 1, iExp) = mean(respRT_Col(find(transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1))); %% rndHam_Col == 1: random trial
+        RTtransTp_type(SubIdx, 1, 2, iExp) = mean(respRT_Col(find(transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2))); %% rndHam_Col == 2: hamiltonian trial
+        RTtransTp_type(SubIdx, 2, 1, iExp) = mean(respRT_Col(find(transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1)));
+        RTtransTp_type(SubIdx, 2, 2, iExp) = mean(respRT_Col(find(transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2)));
+
+        %%% ------ first 700 trials ------
+        RTtransTp_type_first(SubIdx, 1, 1, iExp) = mean(respRT_Col(find(trials_Col <= 700 & transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1)));
+        RTtransTp_type_first(SubIdx, 1, 2, iExp) = mean(respRT_Col(find(trials_Col <= 700 & transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2)));
+        RTtransTp_type_first(SubIdx, 2, 1, iExp) = mean(respRT_Col(find(trials_Col <= 700 & transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1)));
+        RTtransTp_type_first(SubIdx, 2, 2, iExp) = mean(respRT_Col(find(trials_Col <= 700 & transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2)));
+
+        %%% ------ second 800 trials ------
+        RTtransTp_type_second(SubIdx, 1, 1, iExp) = mean(respRT_Col(find(trials_Col > 700 & transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1)));
+        RTtransTp_type_second(SubIdx, 1, 2, iExp) = mean(respRT_Col(find(trials_Col > 700 & transStyle == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2))); 
+        RTtransTp_type_second(SubIdx, 2, 1, iExp) = mean(respRT_Col(find(trials_Col > 700 & transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 1)));
+        RTtransTp_type_second(SubIdx, 2, 2, iExp) = mean(respRT_Col(find(trials_Col > 700 & transStyle ~= 1 & errorIdx_Col ~= 1 & fast_Col ~= 1 & rndHam_Col == 2)));
+
         %% within vs. between cluster transition RTs across blocks
         for iB = 1 : BinL
             ttBlcIdx = (iB - 1) * nBin + 1 : iB * nBin;
@@ -514,6 +530,15 @@ end
 
 %% BehavioralPaper, Figure xx: overall RTs for within vs. between transitions in Random and Hamiltonian Walk
 % RTtransTp_type = zeros(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+dataFlg = 3;
+if dataFlg == 1     % all trials
+    RTtransTp_type_plot = RTtransTp_type;
+elseif dataFlg == 2 % first 700 trials
+    RTtransTp_type_plot = RTtransTp_type_first;
+elseif dataFlg == 3 % second 800 trials
+    RTtransTp_type_plot = RTtransTp_type_second;
+end
+
 figKey = 1;
 if figKey == 0
     barLineWid = 2;
@@ -534,7 +559,7 @@ barPos = [1, 1.5; 1.7, 2.2];
 for iExp = 1 : length(expList)
     disp(['---------- ', expList{iExp}, ' ----------']);
 
-    RTtransTp_type_iExp = RTtransTp_type(:, :, :, iExp);
+    RTtransTp_type_iExp = RTtransTp_type_plot(:, :, :, iExp);
     [RTavg_rOh, RTsem_rOh] = Mean_and_Se(RTtransTp_type_iExp, 1);
     RTavg_rOh = squeeze(RTavg_rOh);
     RTsem_rOh = squeeze(RTsem_rOh);
@@ -542,7 +567,7 @@ for iExp = 1 : length(expList)
     figure('Position', [100 100 260 120]), clf;
     for i_rOh = 1 : 2 % Random vs. Hamiltonian Walk
         if i_rOh == 1
-            walkWord = 'Radom';
+            walkWord = 'Random';
         elseif i_rOh == 2
             walkWord = 'Hamiltonian';
         end

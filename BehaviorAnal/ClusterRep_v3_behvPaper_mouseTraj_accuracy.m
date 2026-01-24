@@ -105,7 +105,9 @@ angAcc_Hami_exp     = nan(subLen, length(circle_list), length(expList)); %% accu
 lenData_Hami_exp    = nan(subLen, length(circle_list), length(expList)); %% data length in each time point
 angAcc_dtr_Hami_exp = nan(subLen, length(circle_list), 3, length(expList));
 %%% accuracy for the within and between transitions for Random and Hamiltonian Walk separately
-acc_trans_walk      = nan(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+acc_trans_walk        = nan(subLen, 2, 2, length(expList)); % the 1st and 2nd '2' denote 'within vs. between cluster transition' and 'random and hamiltonian' walk
+acc_trans_walk_first  = nan(subLen, 2, 2, length(expList)); % first 700 trials: only random walks
+acc_trans_walk_second = nan(subLen, 2, 2, length(expList)); % second 800 trials: mixture of random and hamiltonian walks
 %%% trial proportions of within-cluster and between-cluster transition under Random and Hamiltonian Walk
 trlPro_trans_walk   = nan(subLen, 2, 2, length(expList)); 
 %%% accuracy for boundary-to-within and boundary-to-boundary transitions
@@ -511,6 +513,21 @@ for iExp = 1 : length(expList)
         end
 
         %% accuracy of within- and between-transitions for Random and Hamiltonian Walk trials
+        % ------ first 700 trials ------
+        transStyle_first   = transStyle(1 : rndTrial);
+        rndHam_Col_first   = rndHam_Col(1 : rndTrial);
+        nodesLabel_first   = nodesLabel(1 : rndTrial);
+        lureIn_first       = lureIn(1 : rndTrial);
+        choiceId_ang_first = choiceId_ang(1 : rndTrial);
+
+        % ------ second 700 trials ------
+        transStyle_second   = transStyle((rndTrial + 1) : end);
+        rndHam_Col_second   = rndHam_Col((rndTrial + 1) : end);
+        nodesLabel_second   = nodesLabel((rndTrial + 1) : end);
+        lureIn_second       = lureIn((rndTrial + 1) : end);
+        choiceId_ang_second = choiceId_ang((rndTrial + 1) : end);
+
+        % ------ all trials ------
         transStyle(isnan(choiceId_ang))   = [];
         rndHam_Col(isnan(choiceId_ang))   = [];
         nodesLabel(isnan(choiceId_ang))   = [];
@@ -520,6 +537,28 @@ for iExp = 1 : length(expList)
         acc_trans_walk(iSub, 2, 1, iExp) = length(find(choiceId_ang == 1 & transStyle == 0 & rndHam_Col == 1)) / length(find(transStyle == 0 & rndHam_Col == 1)); %% between & Random-walk
         acc_trans_walk(iSub, 1, 2, iExp) = length(find(choiceId_ang == 1 & transStyle == 1 & rndHam_Col == 2)) / length(find(transStyle == 1 & rndHam_Col == 2)); %% within & Hamiltonian-walk
         acc_trans_walk(iSub, 2, 2, iExp) = length(find(choiceId_ang == 1 & transStyle == 0 & rndHam_Col == 2)) / length(find(transStyle == 0 & rndHam_Col == 2)); %% between & Hamiltonian-walk
+
+        % ------ first 700 trials: all random walks ------
+        transStyle_first(isnan(choiceId_ang_first))   = [];
+        rndHam_Col_first(isnan(choiceId_ang_first))   = [];
+        nodesLabel_first(isnan(choiceId_ang_first))   = [];
+        lureIn_first(isnan(choiceId_ang_first))       = [];
+        choiceId_ang_first(isnan(choiceId_ang_first)) = [];
+        acc_trans_walk_first(iSub, 1, 1, iExp) = length(find(choiceId_ang_first == 1 & transStyle_first == 1 & rndHam_Col_first == 1)) / length(find(transStyle_first == 1 & rndHam_Col_first == 1)); 
+        acc_trans_walk_first(iSub, 2, 1, iExp) = length(find(choiceId_ang_first == 1 & transStyle_first == 0 & rndHam_Col_first == 1)) / length(find(transStyle_first == 0 & rndHam_Col_first == 1));
+        acc_trans_walk_first(iSub, 1, 2, iExp) = length(find(choiceId_ang_first == 1 & transStyle_first == 1 & rndHam_Col_first == 2)) / length(find(transStyle_first == 1 & rndHam_Col_first == 2));
+        acc_trans_walk_first(iSub, 2, 2, iExp) = length(find(choiceId_ang_first == 1 & transStyle_first == 0 & rndHam_Col_first == 2)) / length(find(transStyle_first == 0 & rndHam_Col_first == 2));
+
+        % ------ second 800 trials: mixture of random and hamiltonian walks ------
+        transStyle_second(isnan(choiceId_ang_second))   = [];
+        rndHam_Col_second(isnan(choiceId_ang_second))   = [];
+        nodesLabel_second(isnan(choiceId_ang_second))   = [];
+        lureIn_second(isnan(choiceId_ang_second))       = [];
+        choiceId_ang_second(isnan(choiceId_ang_second)) = [];
+        acc_trans_walk_second(iSub, 1, 1, iExp) = length(find(choiceId_ang_second == 1 & transStyle_second == 1 & rndHam_Col_second == 1)) / length(find(transStyle_second == 1 & rndHam_Col_second == 1)); 
+        acc_trans_walk_second(iSub, 2, 1, iExp) = length(find(choiceId_ang_second == 1 & transStyle_second == 0 & rndHam_Col_second == 1)) / length(find(transStyle_second == 0 & rndHam_Col_second == 1));
+        acc_trans_walk_second(iSub, 1, 2, iExp) = length(find(choiceId_ang_second == 1 & transStyle_second == 1 & rndHam_Col_second == 2)) / length(find(transStyle_second == 1 & rndHam_Col_second == 2));
+        acc_trans_walk_second(iSub, 2, 2, iExp) = length(find(choiceId_ang_second == 1 & transStyle_second == 0 & rndHam_Col_second == 2)) / length(find(transStyle_second == 0 & rndHam_Col_second == 2));
 
         %% calculate the trial proportions of within-cluster and between-clister transitions under Random and Hamiltonian Walk
         trlPro_trans_walk(iSub, 1, 1, iExp) = length(find(transStyle == 1 & rndHam_Col == 1)) / length(choiceId_ang);
@@ -556,13 +595,7 @@ for iExp = 1 : length(expList)
         acc_trans_walk_lure(iSub, 2, 2, 1, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 0 & transStyle ~= 1 & rndHam_Col == 1)) / length(find(nodesLabel == 1 & lureIn == 0 & transStyle ~= 1 & rndHam_Col == 1));
         acc_trans_walk_lure(iSub, 2, 1, 2, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 0 & transStyle == 1 & rndHam_Col == 2)) / length(find(nodesLabel == 1 & lureIn == 0 & transStyle == 1 & rndHam_Col == 2));
         acc_trans_walk_lure(iSub, 2, 2, 2, iExp) = length(find(choiceId_ang == 1 & nodesLabel == 1 & lureIn == 0 & transStyle ~= 1 & rndHam_Col == 2)) / length(find(nodesLabel == 1 & lureIn == 0 & transStyle ~= 1 & rndHam_Col == 2));
-
-        %% save data for the subsequent GLMM analysis
-        % added by rxj @ 02/22/2024
-        % data saved: choice (1-correct, 0-incorrect), trialNo, walkTypes,
-        % transitionTypes
         
-
     end
     %%% merge all trials
     angAcc_exp(1 : subLen, :, iExp)             = angAcc;
@@ -1001,6 +1034,16 @@ for iExp = 1 : length(expList)
 end
 
 %% BehaviorPaper Figure xx: accuracy for the within- and between-transitions in Random and Hamiltonian Walk trials separately
+% ------ which data set ------
+dataFlg = 2;
+if dataFlg == 1     % all trials
+    acc_trans_walk_plot = acc_trans_walk;
+elseif dataFlg == 2 % first 700 trials
+    acc_trans_walk_plot = acc_trans_walk_first;
+elseif dataFlg == 3 % second 800 trials
+    acc_trans_walk_plot = acc_trans_walk_second;
+end
+
 figKey = 1;
 if figKey == 0
     barLineWid = 2;
@@ -1024,7 +1067,7 @@ for iExp = 1 : 3
     disp(['---------- ', expList{iExp}, ' ----------']);
     figure('Position', [100 100 260 120]), clf;
 
-    acc_trans_walk_iExp = acc_trans_walk(:, :, :, iExp);
+    acc_trans_walk_iExp = acc_trans_walk_plot(:, :, :, iExp);
     [accAvg_rOh, accSem_rOh] = Mean_and_Se(acc_trans_walk_iExp, 1);
     accAvg_rOh = squeeze(accAvg_rOh);
     accSem_rOh = squeeze(accSem_rOh); % acc_trans_walk = zeros(subLen, 2, 2, length(expList));
