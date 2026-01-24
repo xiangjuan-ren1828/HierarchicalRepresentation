@@ -325,8 +325,14 @@ for iExp = 1 : length(expList)
         cue_dtr_dis_col = cue_dtr_distance; % distance between cue and distractor
         tgt_dtr_dis_col = tgt_dtr_distance; % distance between target and distractor
         recency_col     = recency_nodes;
+        
         walk_col        = rndHam_Col; % random or hamiltonian walk
-        trans_col       = transStyle; % within or between transitions
+        walk_col(walk_col == 1) = 0;  % *** random walk: 1→0 ***
+        walk_col(walk_col == 2) = 1;  % *** hamiltonian walk: 2→1 ***
+        trans_col       = transStyle;   % within or between transitions
+        trans_col       = trans_col - 1; % *** within transition: 1→0 ***
+        trans_col(trans_col == -1) = 1;  % *** between transition: 0→-1→1 *** 
+
         lureIn_col      = lureIn; 
         errFinal_col    = errorIdx_Col; % correct or incorrect based on the final click
         nodes_BdNode    = [cue_BdNode, tgt_BdNode, dtr_BdNode];
