@@ -320,7 +320,7 @@ for iExp = 1 : length(expList)
         %% constructing the big LMM/GLMM matrix
         group_col   = repmat(iExp, nTrials, 1);
         subj_col    = repmat(SubIdx, nTrials, 1);
-        trialNo_col = log(trials_Col);
+        trialId_col = log(trials_Col);
         dtNum_col   = dtNum - 1;
         cue_dtr_dis_col = cue_dtr_distance; % distance between cue and distractor
         tgt_dtr_dis_col = tgt_dtr_distance; % distance between target and distractor
@@ -333,7 +333,7 @@ for iExp = 1 : length(expList)
         RT_col          = respRT_Col;
         choice_col      = choiceId_ang;
 
-        glmm_subj   = [glmm_subj; group_col, subj_col, trialNo_col, dtNum_col, ...
+        glmm_subj   = [glmm_subj; group_col, subj_col, trialId_col, dtNum_col, ...
                                   cue_dtr_dis_col, tgt_dtr_dis_col, recency_col, ...
                                   walk_col, trans_col, lureIn_col, errFinal_col, ...
                                   nodes_BdNode, ...
