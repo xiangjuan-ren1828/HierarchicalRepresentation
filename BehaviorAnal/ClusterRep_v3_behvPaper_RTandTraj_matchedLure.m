@@ -399,6 +399,8 @@ for iExp = 1 : length(expList)
             %% ---------transition: from boundary node to within node---------
             transIn_InDtr  = transIn_clsInDtr{i}; % transIn_clsInDtr{1} = [1, 2, 5; 1, 3, 5; 1, 4, 5];
             transIn_OutDtr = transIn_clsOutDtr{i};
+            exclude_InDtr  = unique(transIn_OutDtr(:, 3)); % should be 3 nodes
+            exclude_OutDtr = unique(transIn_InDtr(:, 3));  % should be 1 node
             % **************** 1. boundary-to-within transition: with lure ****************
             RTs_InDtr = [];
             acc_InDtr = [];
@@ -407,7 +409,8 @@ for iExp = 1 : length(expList)
             ang_InDtr_traj = cell(1, length(circle_list));
             for j = 1 : size(transIn_InDtr, 1)
                 pair_j = transIn_InDtr(j, :);
-                dt_Yes = sum((dt_nodes == pair_j(3)), 2);
+                no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : nTrials)');
+                dt_Yes = sum((dt_nodes == pair_j(3)), 2) & no_control;
                 % ------ RTs ------
                 RTs_InDtr = [RTs_InDtr; respRT_Col(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
                 % ------ choice accuracy ------
@@ -459,7 +462,8 @@ for iExp = 1 : length(expList)
             ang_OutDtr      = [];
             for k = 1 : size(transIn_OutDtr, 1)
                 pair_k = transIn_OutDtr(k, :);
-                dt_Yes = sum((dt_nodes == pair_k(3)), 2);
+                no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : nTrials)');
+                dt_Yes = sum((dt_nodes == pair_k(3)), 2) & no_control;
                 % ------ RTs ------
                 RTs_OutDtr = [RTs_OutDtr; respRT_Col(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
                 % ------ choice accuracy ------
@@ -520,6 +524,8 @@ for iExp = 1 : length(expList)
             %% ---------transition: from boundary node to boundary node---------
             transOut_InDtr  = transOut_clsInDtr{i};
             transOut_OutDtr = transOut_clsOutDtr{i};
+            exclude_InDtr   = unique(transOut_OutDtr(:, 3)); % should be 3 nodes
+            exclude_OutDtr  = unique(transOut_InDtr(:, 3));  % should be 1 node
             % **************** 3. boundary-to-boundary transition: with lure ****************
             RTs_InDtr = [];
             acc_InDtr = [];
@@ -527,7 +533,8 @@ for iExp = 1 : length(expList)
             ang_InDtr      = [];
             for j = 1 : size(transOut_InDtr, 1)
                 pair_j = transOut_InDtr(j, :);
-                dt_Yes = sum((dt_nodes == pair_j(3)), 2);
+                no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : nTrials)');
+                dt_Yes = sum((dt_nodes == pair_j(3)), 2) & no_control;
                 % ------ RTs ------
                 RTs_InDtr = [RTs_InDtr; respRT_Col(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
                 % ------ choice accuracy ------
@@ -580,7 +587,8 @@ for iExp = 1 : length(expList)
             ang_OutDtr_traj = cell(1, length(circle_list));
             for k = 1 : size(transOut_OutDtr, 1)
                 pair_k = transOut_OutDtr(k, :);
-                dt_Yes = sum((dt_nodes == pair_k(3)), 2);
+                no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : nTrials)');
+                dt_Yes = sum((dt_nodes == pair_k(3)), 2) & no_control;
                 % ------ RTs ------
                 RTs_OutDtr = [RTs_OutDtr; respRT_Col(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
                 % ------ choice accuracy ------
