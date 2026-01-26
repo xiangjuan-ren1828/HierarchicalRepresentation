@@ -1,8 +1,15 @@
+% ClusterRep_v3_behvPaper_RTandTraj_matchedLure.m
+% modified by XR @ Dec 30 2025 based on the followings
+% 
+% 1) RT or choiceAccuracy with lure distractors –– matched the distance
+% between the cue to the lure stimulus or to the non-lure stimulus
+% 2) For the error trials with both lure and another 2-step control
+% stimulus as the distractor, whether participants have a larger
+% probability to choose the lure over the control
+% =========================================================================
 % ClusterRep_v3_RTAnal_lureDtr
 % write by rxj @ 10/25/2021
 %
-% RT or choiceAccuracy with lure distractors –– matched the distance
-% between the cue to the lure stimulus or to the non-lure stimulus
 
 %%
 clear
@@ -194,6 +201,12 @@ tgt_dtr_distance_subj  = cell(subLen, 4, length(expList));
 ang_transIn_subj       = nan(bndNode_Num, 2, subLen, length(expList));
 ang_transOut_subj      = nan(bndNode_Num, 2, subLen, length(expList));
 
+% ---------- In the correct response trials with boundary node transition
+% and lure + 2-step control stimulus, if participants have a larger
+% probability to select the lure >> control >> others ----------
+lureEffect_errTrial_transIn_subj  = nan(bndNode_Num, 3, subLen, length(explist));
+lureEffect_errTrial_transOut_subj = nan(bndNode_Num, 3, subLen, length(explist));
+
 for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
     %% Subject
@@ -307,6 +320,9 @@ for iExp = 1 : length(expList)
         %%% angle for the target and all distractors
         angleMag_oneH = nan(length(stim), 4);
         angleMag_time = nan(length(stim), length(circle_list), 4);
+
+        %%% Determine the identity of the chosen option
+        chosen_opt_trials = nan(length(stim), 1); % the column index of which object was chosen in dt_nodes(iCount, :)
         iCount   = 1;
         for iBlock = 1 : nBlock
             blc_i = find((subNo_col == (SubIdx - 1)) & (blockNo_col == (iBlock - 1)));
@@ -347,6 +363,8 @@ for iExp = 1 : length(expList)
                         choiceId_ang(iCount) = 0; % 0: choose the non-target
                     end
                     angleMag_oneH(iCount, 1 : length(objAngs_stay_left)) = abs(objAngs_stay_left);
+                    % ------ which option participant chose ------
+                    chosen_opt_trials(iCount) = minId;
                 end
 
                 %%% every time point
@@ -409,8 +427,12 @@ for iExp = 1 : length(expList)
             ang_InDtr_traj = cell(1, length(circle_list));
             for j = 1 : size(transIn_InDtr, 1)
                 pair_j = transIn_InDtr(j, :);
-                no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : nTrials)');
-                dt_Yes = sum((dt_nodes == pair_j(3)), 2) & no_control;
+                if dtrCond == 1
+                    dt_Yes = sum((dt_nodes == pair_j(3)), 2);
+                else
+                    no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
+                    dt_Yes = sum((dt_nodes == pair_j(3)), 2) & no_control;
+                end
                 % ------ RTs ------
                 RTs_InDtr = [RTs_InDtr; respRT_Col(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
                 % ------ choice accuracy ------
@@ -446,6 +468,44 @@ for iExp = 1 : length(expList)
                     ang_lure(ll) = ang_lure_tmp_ll(find(dt_nodes_tmp(ll, :) == pair_j(3)));
                 end
                 ang_InDtr = [ang_InDtr; ang_tgt, ang_lure];
+
+                % ---------- Competition between the Lure stimulus and the 2-step control stimulus ---------- 
+                control_stim_mat  = arrayfun(@(x) ismember(dt_nodes(x, :), exclude_InDtr), (1 : length(dt_nodes))'); % if control stimulus exists
+                lure_stim_mat     = (dt_nodes == pair_j(3)); % if lure stimulus exists
+                % ------ Get the column index with 1 for each row ------
+                % For 'control_stim_mat', there might be two '1' for specific trials (rows)
+                [row_idx, col_idx] = find(control_stim_mat);
+                % Put results into a cell array: one cell per row
+                control_stim_idx   = accumarray(row_idx, col_idx, [], @(x){x});
+                [~, lure_stim_idx] = max(lure_stim_mat, [], 2);
+
+
+
+                control_stim_yes = arrayfun(@(x) any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
+                lure_stim_yes    = sum((dt_nodes == pair_j(3)), 2);
+                error_choice_yes = choiceId_ang == 0;
+                comp_trials_yes  = (control_stim_yes) & (lure_stim_yes) & (error_choice_yes);
+                if sum(comp_trials_yes) ~= 0
+                    % proportation that participant chose the lure, the
+                    % control and the other
+                    comp_idx = find(comp_trials_yes == 1);
+                    for i_cm = 1 : length(comp_idx)
+                        chosen_opt_ii = chosen_opt_trials(comp_idx(i_cm));
+                        if ~isnan(chosen_opt_ii)
+                            if chosen_opt_ii == lure_stim_idx(comp_idx(i_cm)) % choosing lure stimulus
+
+                            elseif ismember(chosen_opt_ii, control_stim_idx{comp_idx(i_cm)}) % choosing the control
+                                
+                            else % choosing the other
+
+                            end
+                        end
+                    end
+
+                end
+                
+
+
             end
             if ~isempty(ang_InDtr)
                 ang_InDtr_diff = mod(ang_InDtr(:, 2) - ang_InDtr(:, 1) + pi, 2*pi) - pi;
@@ -462,8 +522,12 @@ for iExp = 1 : length(expList)
             ang_OutDtr      = [];
             for k = 1 : size(transIn_OutDtr, 1)
                 pair_k = transIn_OutDtr(k, :);
-                no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : nTrials)');
-                dt_Yes = sum((dt_nodes == pair_k(3)), 2) & no_control;
+                if dtrCond == 1
+                    dt_Yes = sum((dt_nodes == pair_k(3)), 2);
+                else
+                    no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : length(dt_nodes))');
+                    dt_Yes = sum((dt_nodes == pair_k(3)), 2) & no_control;
+                end
                 % ------ RTs ------
                 RTs_OutDtr = [RTs_OutDtr; respRT_Col(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
                 % ------ choice accuracy ------
@@ -533,8 +597,12 @@ for iExp = 1 : length(expList)
             ang_InDtr      = [];
             for j = 1 : size(transOut_InDtr, 1)
                 pair_j = transOut_InDtr(j, :);
-                no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : nTrials)');
-                dt_Yes = sum((dt_nodes == pair_j(3)), 2) & no_control;
+                if dtrCond == 1
+                    dt_Yes = sum((dt_nodes == pair_j(3)), 2); 
+                else
+                    no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
+                    dt_Yes = sum((dt_nodes == pair_j(3)), 2) & no_control;
+                end
                 % ------ RTs ------
                 RTs_InDtr = [RTs_InDtr; respRT_Col(find(from_nodes == pair_j(1) & to_nodes == pair_j(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
                 % ------ choice accuracy ------
@@ -587,8 +655,12 @@ for iExp = 1 : length(expList)
             ang_OutDtr_traj = cell(1, length(circle_list));
             for k = 1 : size(transOut_OutDtr, 1)
                 pair_k = transOut_OutDtr(k, :);
-                no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : nTrials)');
-                dt_Yes = sum((dt_nodes == pair_k(3)), 2) & no_control;
+                if dtrCond == 1
+                    dt_Yes = sum((dt_nodes == pair_k(3)), 2);
+                else
+                    no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : length(dt_nodes))');
+                    dt_Yes = sum((dt_nodes == pair_k(3)), 2) & no_control;
+                end
                 % ------ RTs ------
                 RTs_OutDtr = [RTs_OutDtr; respRT_Col(find(from_nodes == pair_k(1) & to_nodes == pair_k(2) & dt_Yes == 1 & errorIdx_Col ~= 1 & fast_Col ~= 1))];
                 % ------ choice accuracy ------
@@ -647,6 +719,15 @@ for iExp = 1 : length(expList)
             transOut_Len(i, 2, SubIdx, iExp) = length(RTs_OutDtr);
 
         end
+
+        %% ---------- A new analysis for the boundary-to-within or boundary-to-boundary analysis ----------
+        % The basic idea is: for the cue node as boundary in a trial, we
+        % can check the condition where the lure stimulus and a 2-step
+        % control stimulus exist simultaneously, for these trials, if
+        % partcipants responded incorrectly whether they hava more
+        % probability to select the lure over the 2-step control
+
+
     end
 end
 
@@ -738,7 +819,7 @@ elseif figKey == 1
     indvLineW  = 0.4;
     markSize   = 4.5;
 end
-tail_id  = 'both';
+tail_id  = 'left'; %'both';
 if dtrCond == 1
     chance_i = 1/2;
 elseif dtrCond == 2
@@ -779,7 +860,7 @@ for iExp = 1 : 3
         end
         % ------ Statistical tests ------
         disp(['======== ', transWord, ': with vs. without lure stimulus ========']);
-        [h, p, ci, stats] = ttest(transData_iTb(:, 1), transData_iTb(:, 2))
+        [h, p, ci, stats] = ttest(transData_iTb(:, 1), transData_iTb(:, 2), 'tail', tail_id)
         disp(['t=', num2str(stats.tstat, '%4.3f'), ', p=', num2str(p, '%4.3f')])
     end
     xlim([0.6, 2.6]);
@@ -800,7 +881,8 @@ for iExp = 1 : 3
         end
 
     elseif dataFlg == 2 % choice accuracy
-        ylim([0.05, 0.8]);
+        ylim([0, 1]);
+        %ylim([0.05, 0.8]);
         plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
         if figKey == 0
             % ------For presentation------
@@ -974,7 +1056,7 @@ for iExp = 1 : 3
     end
     xlim([0.6, 2.6]);
     if dtrCond ==4
-        ylim([2.5, 3.5]);
+        %ylim([2.5, 3.5]);
     end
     if figKey == 0
         % ------For presentation------
