@@ -15,8 +15,10 @@ addpath(genpath('HierarchicalCluster/'));
 
 %% Columns index for the clusterResult.mat
 rndTrial = 700;
-HamTrial = 800; 
+HamTrial = 800;
 nTrials  = rndTrial + HamTrial;
+nBin     = 100;
+BinL     = nTrials / nBin;
 
 expModeList = {'mouse', 'key'};
 iMode       = 1;
@@ -87,7 +89,11 @@ nanRemove = 1; % 1: remove 'nan' from choiceId and other variales before importi
 nSim = 500;
 
 %%
-for iExp = 1 %1 : length(expList)
+subLen = 24;
+lambda_trials_subj_nExp     = nan(subLen, nTrials, length(expList));
+lambda_mean_subj_nExp       = nan(subLen, 4, length(expList)); % Col 1-2: within and between transition across all trials; Col3-4: only the last 800 trials with Random and Hamiltonian walks intermixed
+lambda_mean_trans_walk_nExp = nan(subLen, 2, 2, length(expList)); % (only the last 800 trials) first 2: within vs. between trans; second 2: random vs. ham walk
+for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
     %% Subject
     if isequal(ExpWord, 'ImplicitExp')
@@ -141,15 +147,14 @@ for iExp = 1 %1 : length(expList)
     %% Loop over participants
     M_trans_subj       = nan(15, 15, subLen, length(MList));
     M_ass_subj         = nan(15, 15, subLen, length(MList));
-    lambda_trials_subj = nan(nTrials, subLen, length(MList));
-    lambda_mean_subj   = nan(subLen, 4, length(MList));
 
     %hiddenMat = zeros(states, states, 2, subLen); % 2 means 2 models: maxEntropy and SR  
-    hiddenMat = cell(subLen, 2);
+    hiddenMat       = cell(subLen, 2);
     transStyle_subj = cell(subLen, 1);
     rndOrHam_subj   = cell(subLen, 1); 
     dtNum_subj      = cell(subLen, 1);
     for iSub = 1 : subLen
+        disp([ExpWord, '-subj', num2str(iSub)]);
         %%
         subID  = subjLab{iSub};
         subjBv = subj_listBv{iSub};
@@ -377,17 +382,27 @@ for iExp = 1 %1 : length(expList)
                     [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_gdChoice_truncAttMod(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
                                                             mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
                 end
+
                 M_trans_subj(:, :, iSub, iM) = M_trans;
                 M_ass_subj(:, :, iSub, iM)   = M_ass;
-                lambda_trials_subj(trl_counts, iSub, iM) = lambda_trials;
+                lambda_trials_subj_nExp(iSub, trl_counts, iExp) = lambda_trials;
 
-                %%% quantifying lambda_trials
-                lambda_mean_subj(iSub, 1) = nanmean(lambda_trials(transStyle == 0));
-                lambda_mean_subj(iSub, 2) = nanmean(lambda_trials(transStyle == 1));
+                %%% ------ quantifying lambda_trials: the weight after within and between transitions ------
+                % ---- All trials ----
+                lambda_mean_subj_nExp(iSub, 1, iExp) = nanmean(lambda_trials(transStyle == 0));
+                lambda_mean_subj_nExp(iSub, 2, iExp) = nanmean(lambda_trials(transStyle == 1));
+                % ---- The final 800 trials (mixture of random and hamiltonian walk) ----
+                lambda_mean_subj_nExp(iSub, 3, iExp) = nanmean(lambda_trials(find(transStyle == 0 & trl_counts > rndTrial)));
+                lambda_mean_subj_nExp(iSub, 4, iExp) = nanmean(lambda_trials(find(transStyle == 1 & trl_counts > rndTrial)));
 
-%                 lambda_mean_subj(iSub, 3) = nanmean(lambda_trials(transStyle_history == 0));
-%                 lambda_mean_subj(iSub, 4) = nanmean(lambda_trials(transStyle_history == 1));
-
+                %%% ------ lambda_trials for transitions (within vs. between) and walks (random vs. hamiltonian) ------
+                %%% only for the last 800 trials (mixture of random and hamiltonian walk)
+                % ---- Random Walk ----
+                lambda_mean_trans_walk_nExp(iSub, 1, 1, iExp) = nanmean(lambda_trials(find(transStyle == 0 & rndOrHam == 1 & trl_counts > rndTrial)));
+                lambda_mean_trans_walk_nExp(iSub, 2, 1, iExp) = nanmean(lambda_trials(find(transStyle == 1 & rndOrHam == 1 & trl_counts > rndTrial)));
+                % ---- Hamiltonian Walk ----
+                lambda_mean_trans_walk_nExp(iSub, 1, 2, iExp) = nanmean(lambda_trials(find(transStyle == 0 & rndOrHam == 2 & trl_counts > rndTrial)));
+                lambda_mean_trans_walk_nExp(iSub, 2, 2, iExp) = nanmean(lambda_trials(find(transStyle == 1 & rndOrHam == 2 & trl_counts > rndTrial)));
             end
             
             %%
@@ -399,59 +414,263 @@ for iExp = 1 %1 : length(expList)
     end
 end
 
-%% plotting the weights trace
-%% average across subjects
-figure('Position', [100 100 600 200]), clf;
-[lambdaAvg, lambdaSe] = Mean_and_Se(lambda_trials_subj, 2);
-%errorbar(1 : 1 : 1500, lambdaAvg, lambdaSe, 'Color', 'r', 'LineStyle', '-', 'LineWidth', 1); hold on;
-shadedErrorBar(1 : 1 : 1500, lambdaAvg, lambdaSe, {'Color', [0.78, 0.50, 0.75], 'MarkerFaceColor', [0.78, 0.50, 0.75], 'LineStyle', '-', 'LineWidth', 2}, 0.5); hold on;
-plot(xlim, [0.5, 0.5], 'k--', 'LineWidth', 1); hold on;
-set(gca, 'LineWidth', 1);
-set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
-ylim([0, 1]);
-box off;
+%% behavioral paper, Figure xx: lambda_mean for all trials or the final 800 trials
+dataFlg = 1;
+if dataFlg == 1     % ------ all trials ------
+    lambda_mean_plot = lambda_mean_subj_nExp(:, 1 : 2, :);
+elseif dataFlg == 2 % ------ final 800 trials ------
+    lambda_mean_plot = lambda_mean_subj_nExp(:, 3 : 4, :);
+end
+
+figKey = 1;  % 0: figure for presentation; 1: figure for AI.
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 1.5; %2;
+    refLineWid = 0.5;
+end
+barPos = [1, 1.5];
+for iExp = 1 : 3
+    lambda_mean_plot_i = lambda_mean_plot(:, :, iExp);
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 200 120]), clf;
+
+    for ib = 1 : 2 % within vs. between transitions
+        [tAcc_avg, tAcc_sem] = Mean_and_Se(lambda_mean_plot_i, 1);
+        plot(barPos, lambda_mean_plot_i, 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', 0.4); hold on;
+        plot(barPos, tAcc_avg, 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for iDm = 1 : 2
+            errorbar(barPos(iDm), tAcc_avg(iDm), tAcc_sem(iDm), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+            plot(barPos(iDm), tAcc_avg(iDm), 'Marker', 'o', 'MarkerSize', 4.5, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', 'k', 'LineStyle', '-'); hold on;
+        end
+    end
+    % ------ Statistical tests ------
+    disp('======== \lambda~=0.5: within ========');
+    [h, p, ci, stats] = ttest(lambda_mean_plot_i(:, 1), 0.5)
+    disp('======== \lambda~=0.5: between ========');
+    [h, p, ci, stats] = ttest(lambda_mean_plot_i(:, 2), 0.5)
+    disp('======== \lambda: within vs. between ========');
+    [h, p, ci, stats] = ttest(lambda_mean_plot_i(:, 1), lambda_mean_plot_i(:, 2))
+    xlim([0.6, 1.9]);
+    ylim([0, 1]);
+    plot(xlim, [0.5, 0.5], 'k--', 'LineWidth', 0.6); hold on;
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8); % 0.8
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [1, 1.5], 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', {'', '', ''});
+    end
+    box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-\lambda-mean.png'];
+    %exportgraphics(ax, save_name, 'Resolution', 600);
+
+end
+
+%% behavioral paper, Figure xx: lambda_mean for 2 transitions (within vs. between) times 2 walks (random vs. hamiltonian) or the final 800 trials
+% lambda_mean_trans_walk_nExp = nan(subLen, 2, 2, length(expList));
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+
+barPos   = [1, 1.5; 1.7, 2.2];
+for iExp = 1 : 3
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
+
+    lambda_trans_walk_iExp = lambda_mean_trans_walk_nExp(:, :, :, iExp);
+    [accAvg_rOh, accSem_rOh] = Mean_and_Se(lambda_trans_walk_iExp, 1);
+    accAvg_rOh = squeeze(accAvg_rOh);
+    accSem_rOh = squeeze(accSem_rOh); % acc_trans_walk = zeros(subLen, 2, 2, length(expList));
+    for i_rOh = 1 : 2 % Random vs. Hamiltonian Walk
+        if i_rOh == 1
+            walkWord = 'Radom';
+        elseif i_rOh == 2
+            walkWord = 'Hamiltonian';
+        end
+        barPos_i = barPos(i_rOh, :);
+        %%% line plot
+        plot(barPos_i, lambda_trans_walk_iExp(:, :, i_rOh), 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', indvLineW); hold on;
+        plot(barPos_i, accAvg_rOh(:, i_rOh), 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for i_tp = 1 : 2 % within vs. between-transition
+            errorbar(barPos_i(i_tp), accAvg_rOh(i_tp, i_rOh), accSem_rOh(i_tp, i_rOh), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+            plot(barPos_i(i_tp), accAvg_rOh(i_tp, i_rOh), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', 'k', 'LineStyle', '-'); hold on;
+        end
+        % ------ Statistical tests ------
+        disp(['======== ', walkWord, '-within vs. between trans ========']);
+        [h, p, ci, stats] = ttest(lambda_trans_walk_iExp(:, 1, i_rOh), lambda_trans_walk_iExp(:, 2, i_rOh))
+    end
+    xlim([0.6, 2.6]);
+    ylim([0, 1]);
+    plot(xlim, [0.5, 0.5], 'k--', 'LineWidth', 0.6); hold on;
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+    end
+    box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-\lambda-trans-walk.png'];
+%     exportgraphics(ax, save_name, 'Resolution', 600);
+
+end
+
+%% Behavioral paper, Figure xx: weights trace across trials (bin every 100 trials)
+% lambda_trials_subj_nExp = nan(subLen, nTrials, length(expList));
+lambda_bin_subj_nExp = nan(subLen, BinL, length(expList));
+for iExp = 1 : 3
+    for iSub = 1 : size(lambda_trials_subj_nExp, 1)
+        lambda_trials_iSub = squeeze(lambda_trials_subj_nExp(iSub, :, iExp));
+        for iB = 1 : BinL
+            trlIdx    = (iB - 1) * nBin + 1 : iB * nBin;
+            lambda_iB = lambda_trials_iSub(trlIdx);
+            lambda_bin_subj_nExp(iSub, iB, iExp) = nanmean(lambda_iB);
+        end
+    end
+end
+
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 2;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 6;
+end
+
+for iExp = 1 : length(expList)
+    figure('Position', [100 100 260 120]), clf;
+    hold on;
+    
+    lambdaAcc_ii = squeeze(lambda_bin_subj_nExp(:, :, iExp));
+    [accAvg, accSem] = Mean_and_Se(lambdaAcc_ii, 1);
+    errorbar(1 : 1 : BinL, accAvg, accSem, 'Color', 'k', 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+
+    for iB = 1 : BinL
+        plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', 'k', 'LineStyle', '-'); hold on;
+    end
+    xlim([0.5, BinL+0.5]);
+    ylim([0, 1]);
+    plot(xlim, [0.5, 0.5], 'k--', 'LineWidth', 0.6); hold on;
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 1 : 1 : BinL, 'XTickLabel', 1 : 1 : BinL);
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 1 : 1 : BinL, 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+    end
+    box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-\lambda-bins.png'];
+%     exportgraphics(ax, save_name, 'Resolution', 600);
+end
+
+%% Behavioral paper, Supplementary Figure xx: weights trace across trials (all 1500 trials)
+% lambda_trials_subj_nExp = nan(subLen, nTrials, length(expList));
+figKey = 1;
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+    indvLineW  = 1;
+    markSize   = 6;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 1;
+    refLineWid = 0.5;
+    indvLineW  = 0.4;
+    markSize   = 4.5;
+end
+
+for iExp = 1 : 3
+    figure('Position', [100 100 600 200]), clf;
+    [lambdaAvg, lambdaSe] = Mean_and_Se(lambda_trials_subj_nExp(:, :, iExp), 1);
+    %errorbar(1 : 1 : 1500, lambdaAvg, lambdaSe, 'Color', 'r', 'LineStyle', '-', 'LineWidth', 1); hold on;
+    shadedErrorBar(1 : 1 : 1500, lambdaAvg, lambdaSe, {'Color', [0.78, 0.50, 0.75], 'MarkerFaceColor', [0.78, 0.50, 0.75], 'LineStyle', '-', 'LineWidth', errLineWid}, 0.5); hold on;
+    ylim([0, 1]);
+    plot(xlim, [0.5, 0.5], 'k--', 'LineWidth', 0.6); hold on;
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+    end
+    box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-\lambda-trials.png'];
+%     exportgraphics(ax, save_name, 'Resolution', 600);
+
+end
 
 
 %%
 addpath('tight_subplot/');
 
 %% single subject
-% lambda_trials_subj = nan(nTrials, subLen, length(MList));
-figure('Position', [100 100 1200 600]), clf;
-ha = tight_subplot(4, 6, [.02 .02], [.03 .01], [.02 .01]); %gap, marg_h, marg_w
-ha_i = 1;
-for iSub = 1 : subLen
-    axes(ha(ha_i));
-    plot(1 : 1 : 1500, lambda_trials_subj(:, iSub), 'Color', 'k', 'LineStyle', '-', 'LineWidth', 1); hold on;
-    set(gca, 'LineWidth', 1);
-    set(gca, 'FontSize', 8, 'FontWeight', 'bold', 'FontName', 'Arial');
-    box off;
-    ha_i = ha_i + 1;
+% lambda_trials_subj_nExp = nan(subLen, nTrials, length(expList));
+for iExp = 1 : 3
+    figure('Position', [100 100 1200 600]), clf;
+    ha = tight_subplot(4, 6, [.02 .02], [.03 .01], [.02 .01]); %gap, marg_h, marg_w
+    ha_i = 1;
+    for iSub = 1 : subLen
+        axes(ha(ha_i));
+        plot(1 : 1 : 1500, lambda_trials_subj_nExp(iSub, :, iExp), 'Color', 'k', 'LineStyle', '-', 'LineWidth', 1); hold on;
+        set(gca, 'LineWidth', 1);
+        set(gca, 'FontSize', 8, 'FontWeight', 'bold', 'FontName', 'Arial');
+        box off;
+        ha_i = ha_i + 1;
+    end
 end
 
 
-%% lambda_mean
-% added by rxj @ 06/21/2023
-colorPer = [49, 130, 189; ...
-            107, 174, 214] ./ 255;
-barPos = [1, 1.5];
-figure('Position', [100 100 230 120]), clf;
-[lb_avg, lb_sem] = Mean_and_Se(lambda_mean_subj, 1); 
-[h,p,ci,stats] = ttest(lambda_mean_subj(:, 1), lambda_mean_subj(:, 2))
-for iB = 1 : 2
-    b = bar(barPos(iB), lb_avg(iB), 0.4, 'LineStyle', '-', 'LineWidth', 2); hold on;
-    b.FaceColor = colorPer(iB, :);
-    errorbar(barPos(iB), lb_avg(iB), lb_sem(iB), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', 2); hold on;
-end
-%plot(barPos(1 : 2), lambda_mean_subj(:, [1, 2]), 'Color', [0.4, 0.4, 0.4], 'LineStyle', '-', 'LineWidth', 1); hold on;
-%plot(barPos(3 : 4), lambda_mean_subj(:, [3, 4]), 'Color', [0.4, 0.4, 0.4], 'LineStyle', '-', 'LineWidth', 1); hold on;
-xlim([0.5, 2]);
-set(gca, 'LineWidth', 2);
-set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
-set(gca, 'XTick', '', 'XTickLabel', '');
-ylim([0, 0.8]);
-plot(xlim, [0.5, 0.5], 'k--', 'LineWidth', 1); hold on;
-box off;
 
 
 
