@@ -204,8 +204,9 @@ ang_transOut_subj      = nan(bndNode_Num, 2, subLen, length(expList));
 % ---------- In the correct response trials with boundary node transition
 % and lure + 2-step control stimulus, if participants have a larger
 % probability to select the lure >> control >> others ----------
-lureEffect_errTrial_transIn_subj  = nan(bndNode_Num, 3, subLen, length(explist));
-lureEffect_errTrial_transOut_subj = nan(bndNode_Num, 3, subLen, length(explist));
+% 3: frequency (not proportion) for each condition
+lureEffect_errTrial_transIn_subj  = zeros(bndNode_Num, 3, subLen, length(expList));
+lureEffect_errTrial_transOut_subj = zeros(bndNode_Num, 3, subLen, length(expList));
 
 for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
@@ -430,7 +431,7 @@ for iExp = 1 : length(expList)
                 if dtrCond == 1
                     dt_Yes = sum((dt_nodes == pair_j(3)), 2);
                 else
-                    no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
+                    no_control = ~any(ismember(dt_nodes, exclude_InDtr), 2); % no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))')
                     dt_Yes = sum((dt_nodes == pair_j(3)), 2) & no_control;
                 end
                 % ------ RTs ------
@@ -468,44 +469,6 @@ for iExp = 1 : length(expList)
                     ang_lure(ll) = ang_lure_tmp_ll(find(dt_nodes_tmp(ll, :) == pair_j(3)));
                 end
                 ang_InDtr = [ang_InDtr; ang_tgt, ang_lure];
-
-                % ---------- Competition between the Lure stimulus and the 2-step control stimulus ---------- 
-                control_stim_mat  = arrayfun(@(x) ismember(dt_nodes(x, :), exclude_InDtr), (1 : length(dt_nodes))'); % if control stimulus exists
-                lure_stim_mat     = (dt_nodes == pair_j(3)); % if lure stimulus exists
-                % ------ Get the column index with 1 for each row ------
-                % For 'control_stim_mat', there might be two '1' for specific trials (rows)
-                [row_idx, col_idx] = find(control_stim_mat);
-                % Put results into a cell array: one cell per row
-                control_stim_idx   = accumarray(row_idx, col_idx, [], @(x){x});
-                [~, lure_stim_idx] = max(lure_stim_mat, [], 2);
-
-
-
-                control_stim_yes = arrayfun(@(x) any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
-                lure_stim_yes    = sum((dt_nodes == pair_j(3)), 2);
-                error_choice_yes = choiceId_ang == 0;
-                comp_trials_yes  = (control_stim_yes) & (lure_stim_yes) & (error_choice_yes);
-                if sum(comp_trials_yes) ~= 0
-                    % proportation that participant chose the lure, the
-                    % control and the other
-                    comp_idx = find(comp_trials_yes == 1);
-                    for i_cm = 1 : length(comp_idx)
-                        chosen_opt_ii = chosen_opt_trials(comp_idx(i_cm));
-                        if ~isnan(chosen_opt_ii)
-                            if chosen_opt_ii == lure_stim_idx(comp_idx(i_cm)) % choosing lure stimulus
-
-                            elseif ismember(chosen_opt_ii, control_stim_idx{comp_idx(i_cm)}) % choosing the control
-                                
-                            else % choosing the other
-
-                            end
-                        end
-                    end
-
-                end
-                
-
-
             end
             if ~isempty(ang_InDtr)
                 ang_InDtr_diff = mod(ang_InDtr(:, 2) - ang_InDtr(:, 1) + pi, 2*pi) - pi;
@@ -514,6 +477,49 @@ for iExp = 1 : length(expList)
 
             RT_transIn_subj(i, 1, SubIdx, iExp)  = nanmean(RTs_InDtr);
             acc_transIn_subj(i, 1, SubIdx, iExp) = sum(acc_InDtr(:, 1)) / sum(acc_InDtr(:, 2));
+
+            % ---------- Competition between the Lure stimulus and the 2-step control stimulus ---------- 
+            control_stim_mat   = ismember(dt_nodes, unique(transIn_OutDtr(:, 3))); % if control stimulus exists
+            lure_stim_mat      = ismember(dt_nodes, unique(transIn_InDtr(:, 3))); % if lure stimulus exists
+            % ------ Get the column index with 1 for each row ------
+            % For 'control_stim_mat', there might be two '1' for specific trials (rows)
+            [row_idx, col_idx] = find(control_stim_mat);
+            % Returns all indices per row as cell array; no result - empty cell
+            control_stim_idx   = accumarray(row_idx, col_idx, ...
+                                     [size(control_stim_mat,1), 1], ...
+                                     @(x){x}, {[]});
+            [row_idx, col_idx] = find(lure_stim_mat);
+            lure_stim_idx      = accumarray(row_idx, col_idx, ...
+                                     [size(lure_stim_mat,1), 1], ...
+                                     @(x){x}, {[]});
+
+            control_stim_yes = any(control_stim_mat, 2); % control_stim_yes = arrayfun(@(x) any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
+            lure_stim_yes    = any(lure_stim_mat, 2);
+            error_choice_yes = choiceId_ang == 0;
+            from_node_yes    = any(ismember(from_nodes, unique(transIn_InDtr(:, 1))), 2);
+            to_node_yes      = any(ismember(to_nodes, unique(transIn_InDtr(:, 2))), 2);
+            comp_trials_yes  = (control_stim_yes) & (lure_stim_yes) & (error_choice_yes) & (from_node_yes) & (to_node_yes);
+            if sum(comp_trials_yes) ~= 0
+                % proportation that participant chose the lure, the
+                % control and the other
+                comp_idx = find(comp_trials_yes == 1);
+                for i_cm = 1 : length(comp_idx)
+                    chosen_opt_ii = chosen_opt_trials(comp_idx(i_cm));
+                    chosen_opt_ii = chosen_opt_ii - 1; % the first column is always the target
+                    if ~isnan(chosen_opt_ii)
+                        if chosen_opt_ii == lure_stim_idx{comp_idx(i_cm)} % choosing lure stimulus
+                            lureEffect_errTrial_transIn_subj(i, 1, SubIdx, iExp) = lureEffect_errTrial_transIn_subj(i, 1, SubIdx, iExp) + 1;
+
+                        elseif ismember(chosen_opt_ii, control_stim_idx{comp_idx(i_cm)}) % choosing the control
+                            lureEffect_errTrial_transIn_subj(i, 2, SubIdx, iExp) = lureEffect_errTrial_transIn_subj(i, 2, SubIdx, iExp) + 1;
+
+                        else % choosing the other
+                            lureEffect_errTrial_transIn_subj(i, 3, SubIdx, iExp) = lureEffect_errTrial_transIn_subj(i, 3, SubIdx, iExp) + 1;
+
+                        end
+                    end
+                end
+            end
 
             % **************** 2. boundary-to-within transition: without lure ****************
             RTs_OutDtr = [];
@@ -525,7 +531,7 @@ for iExp = 1 : length(expList)
                 if dtrCond == 1
                     dt_Yes = sum((dt_nodes == pair_k(3)), 2);
                 else
-                    no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : length(dt_nodes))');
+                    no_control = ~any(ismember(dt_nodes, exclude_OutDtr), 2); % no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : length(dt_nodes))');
                     dt_Yes = sum((dt_nodes == pair_k(3)), 2) & no_control;
                 end
                 % ------ RTs ------
@@ -600,7 +606,7 @@ for iExp = 1 : length(expList)
                 if dtrCond == 1
                     dt_Yes = sum((dt_nodes == pair_j(3)), 2); 
                 else
-                    no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
+                    no_control = ~any(ismember(dt_nodes, exclude_InDtr), 2); % no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
                     dt_Yes = sum((dt_nodes == pair_j(3)), 2) & no_control;
                 end
                 % ------ RTs ------
@@ -638,6 +644,7 @@ for iExp = 1 : length(expList)
                     ang_lure(ll) = ang_lure_tmp_ll(find(dt_nodes_tmp(ll, :) == pair_j(3)));
                 end
                 ang_InDtr = [ang_InDtr; ang_tgt, ang_lure];
+
             end
             if ~isempty(ang_InDtr)
                 ang_InDtr_diff = mod(ang_InDtr(:, 2) - ang_InDtr(:, 1) + pi, 2*pi) - pi;
@@ -646,6 +653,49 @@ for iExp = 1 : length(expList)
 
             RT_transOut_subj(i, 1, SubIdx, iExp)  = nanmean(RTs_InDtr);
             acc_transOut_subj(i, 1, SubIdx, iExp) = sum(acc_InDtr(:, 1)) / sum(acc_InDtr(:, 2));
+
+            % ---------- Competition between the Lure stimulus and the 2-step control stimulus ---------- 
+            control_stim_mat   = ismember(dt_nodes, unique(transOut_OutDtr(:, 3))); % if control stimulus exists
+            lure_stim_mat      = ismember(dt_nodes, unique(transOut_InDtr(:, 3))); % if lure stimulus exists
+            % ------ Get the column index with 1 for each row ------
+            % For 'control_stim_mat', there might be two '1' for specific trials (rows)
+            [row_idx, col_idx] = find(control_stim_mat);
+            % Returns all indices per row as cell array; no result - empty cell
+            control_stim_idx   = accumarray(row_idx, col_idx, ...
+                                     [size(control_stim_mat,1), 1], ...
+                                     @(x){x}, {[]});
+            [row_idx, col_idx] = find(lure_stim_mat);
+            lure_stim_idx      = accumarray(row_idx, col_idx, ...
+                                     [size(lure_stim_mat,1), 1], ...
+                                     @(x){x}, {[]});
+
+            control_stim_yes = any(control_stim_mat, 2); % control_stim_yes = arrayfun(@(x) any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
+            lure_stim_yes    = any(lure_stim_mat, 2);
+            error_choice_yes = choiceId_ang == 0;
+            from_node_yes    = any(ismember(from_nodes, unique(transOut_InDtr(:, 1))), 2);
+            to_node_yes      = any(ismember(to_nodes, unique(transOut_InDtr(:, 2))), 2);
+            comp_trials_yes  = (control_stim_yes) & (lure_stim_yes) & (error_choice_yes) & (from_node_yes) & (to_node_yes);
+            if sum(comp_trials_yes) ~= 0
+                % proportation that participant chose the lure, the
+                % control and the other
+                comp_idx = find(comp_trials_yes == 1);
+                for i_cm = 1 : length(comp_idx)
+                    chosen_opt_ii = chosen_opt_trials(comp_idx(i_cm));
+                    chosen_opt_ii = chosen_opt_ii - 1; % the first column is always the target
+                    if ~isnan(chosen_opt_ii)
+                        if chosen_opt_ii == lure_stim_idx{comp_idx(i_cm)} % choosing lure stimulus
+                            lureEffect_errTrial_transOut_subj(i, 1, SubIdx, iExp) = lureEffect_errTrial_transOut_subj(i, 1, SubIdx, iExp) + 1;
+
+                        elseif ismember(chosen_opt_ii, control_stim_idx{comp_idx(i_cm)}) % choosing the control
+                            lureEffect_errTrial_transOut_subj(i, 2, SubIdx, iExp) = lureEffect_errTrial_transOut_subj(i, 2, SubIdx, iExp) + 1;
+
+                        else % choosing the other
+                            lureEffect_errTrial_transOut_subj(i, 3, SubIdx, iExp) = lureEffect_errTrial_transOut_subj(i, 3, SubIdx, iExp) + 1;
+
+                        end
+                    end
+                end
+            end
 
             % **************** 4. boundary-to-boundary transition: without lure ****************
             RTs_OutDtr = [];
@@ -658,7 +708,7 @@ for iExp = 1 : length(expList)
                 if dtrCond == 1
                     dt_Yes = sum((dt_nodes == pair_k(3)), 2);
                 else
-                    no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : length(dt_nodes))');
+                    no_control = ~any(ismember(dt_nodes, exclude_OutDtr), 2); % no_control = arrayfun(@(x) ~any(ismember(dt_nodes(x, :), exclude_OutDtr)), (1 : length(dt_nodes))');
                     dt_Yes = sum((dt_nodes == pair_k(3)), 2) & no_control;
                 end
                 % ------ RTs ------
@@ -904,6 +954,76 @@ for iExp = 1 : 3
     save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-oneHot-lure.png'];
 %     exportgraphics(ax, save_name, 'Resolution', 600);
 end
+
+%% BehavioralPaper, Figure xx: Lure effect when both lure and 2-step control stimulus existed in the incorrect response trials
+% lureEffect_errTrial_transIn_subj  = zeros(bndNode_Num, 3, subLen, length(expList));
+% lureEffect_errTrial_transOut_subj = zeros(bndNode_Num, 3, subLen, length(expList));
+% ------ For each participant, concatenating the 6 boundary nodes
+% conditions and then calcuate the proportions ------
+lureEffect_errTrial_transIn_all  = squeeze(sum(lureEffect_errTrial_transIn_subj, 1));
+lureEffect_errTrial_transOut_all = squeeze(sum(lureEffect_errTrial_transOut_subj, 1));
+% ------ Convert to proportions ------
+FA_lure_transIn  = lureEffect_errTrial_transIn_all ./ repmat(sum(lureEffect_errTrial_transIn_all, 1), [3, 1, 1]);
+FA_lure_transOut = lureEffect_errTrial_transOut_all ./ repmat(sum(lureEffect_errTrial_transOut_all, 1), [3, 1, 1]);
+
+figKey = 1;  % 0: figure for presentation; 1: figure for AI.
+if figKey == 0
+    barLineWid = 2;
+    errLineWid = 3;
+    refLineWid = 1;
+elseif figKey == 1
+    barLineWid = 1;
+    errLineWid = 1.5; %2;
+    refLineWid = 0.5;
+end
+% barPos = [1, 1.4, 1.8; 2.0, 2.4, 2.8];
+barPos = [1, 1.5; 1.7, 2.2];
+for iExp = 1 : 3
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 260 120]), clf;
+
+    for ib = 1 : 2 % boundary-to-within vs. boundary-to-boundary transition
+        barPos_i = barPos(ib, :);
+        if ib == 1     % boundary-to-within
+            FA_lure_ii = FA_lure_transIn(1 : 2, :, iExp);
+        elseif ib == 2 % boundary-to-boundary
+            FA_lure_ii = FA_lure_transOut(1 : 2, :, iExp);
+        end
+        FA_lure_ii = FA_lure_ii'; % (subLen * 2)
+        [tAcc_avg, tAcc_sem] = Mean_and_Se(FA_lure_ii, 1);
+        plot(barPos_i, FA_lure_ii, 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', 0.4); hold on;
+        plot(barPos_i, tAcc_avg, 'Color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+        for iDm = 1 : 2
+            errorbar(barPos_i(iDm), tAcc_avg(iDm), tAcc_sem(iDm), 'Color', 'k', 'LineStyle', 'none', 'LineWidth', errLineWid); hold on;
+            plot(barPos_i(iDm), tAcc_avg(iDm), 'Marker', 'o', 'MarkerSize', 4.5, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', 'k', 'LineStyle', '-'); hold on;
+        end
+        % ------ Statistical tests ------
+        disp('======== FA: lure vs. control ========');
+        [h, p, ci, stats] = ttest(FA_lure_ii(:, 1), FA_lure_ii(:, 2), 'tail', 'right')
+    end
+    xlim([0.6, 2.6]);
+    ylim([0, 1]);
+    if figKey == 0
+        % ------For presentation------
+        set(gca, 'LineWidth', 2);
+        set(gca, 'FontSize', 15, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', '', 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', 0 : 0.5 : 1);
+    elseif figKey == 1
+        % ------For Adobe Illustrator------
+        set(gca, 'LineWidth', 0.8); % 0.8
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
+        set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', {'', '', ''});
+    end
+    box off;
+    ax = gca;
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-FA-lure.png'];
+    exportgraphics(ax, save_name, 'Resolution', 600);
+
+end
+
+
 
 %% BehavioralPaper, Figure xx: influence of lure stimulus on choice accuracy trajectory
 % acc_transIn_traj_nodeAvg  = squeeze(nanmean(acc_transIn_traj_subj, 1)); % length(circle_list) * 2 * subLen * length(expList)) 
