@@ -472,7 +472,7 @@ for iExp = 1 : 3
     end
     box off;
     ax = gca;
-    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-\lambda-mean.png'];
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-lambda-mean.png'];
     %exportgraphics(ax, save_name, 'Resolution', 600);
 
 end
@@ -539,7 +539,7 @@ for iExp = 1 : 3
     end
     box off;
     ax = gca;
-    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-\lambda-trans-walk.png'];
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-lambda-trans-walk.png'];
 %     exportgraphics(ax, save_name, 'Resolution', 600);
 
 end
@@ -579,10 +579,10 @@ for iExp = 1 : length(expList)
     
     lambdaAcc_ii = squeeze(lambda_bin_subj_nExp(:, :, iExp));
     [accAvg, accSem] = Mean_and_Se(lambdaAcc_ii, 1);
-    errorbar(1 : 1 : BinL, accAvg, accSem, 'Color', 'k', 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
+    errorbar(1 : 1 : BinL, accAvg, accSem, 'Color', [0.78, 0.50, 0.75], 'LineStyle', '-', 'LineWidth', errLineWid); hold on;
 
     for iB = 1 : BinL
-        plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', 'k', 'LineStyle', '-'); hold on;
+        plot(iB, accAvg(iB), 'Marker', 'o', 'MarkerSize', markSize, 'MarkerEdgeColor', [0, 0, 0], 'MarkerFaceColor', [0.78, 0.50, 0.75], 'LineStyle', '-'); hold on;
     end
     xlim([0.5, BinL+0.5]);
     ylim([0, 1]);
@@ -602,8 +602,8 @@ for iExp = 1 : length(expList)
     end
     box off;
     ax = gca;
-    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-\lambda-bins.png'];
-%     exportgraphics(ax, save_name, 'Resolution', 600);
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-lambda-bins.png'];
+    exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% Behavioral paper, Supplementary Figure xx: weights trace across trials (all 1500 trials)
@@ -645,8 +645,8 @@ for iExp = 1 : 3
     end
     box off;
     ax = gca;
-    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-\lambda-trials.png'];
-%     exportgraphics(ax, save_name, 'Resolution', 600);
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-lambda-trials.png'];
+    exportgraphics(ax, save_name, 'Resolution', 600);
 
 end
 

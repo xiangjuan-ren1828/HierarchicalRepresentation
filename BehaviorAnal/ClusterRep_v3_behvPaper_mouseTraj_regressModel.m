@@ -556,7 +556,7 @@ end
 % betas_times_firstHalf_nExp  = cell(subLen, length(expList));
 % betas_times_secondHalf_nExp = cell(subLen, length(expList));
 
-trialFlg = 1; % 1-all trials; 2-first 700 trials; 3-last 800 trials;
+trialFlg = 3; % 1-all trials; 2-first 700 trials; 3-last 800 trials;
 if trialFlg == 1
     betas_times_tmp = betas_times_nExp;
 elseif trialFlg == 2
@@ -565,7 +565,7 @@ elseif trialFlg == 3
     betas_times_tmp = betas_times_secondHalf_nExp;
 end
 
-dataFlg  = 1; % 1-predicted choice probability as the regressor; 2-EVs
+dataFlg  = 2; % 1-predicted choice probability as the regressor; 2-EVs
 betas_times_plot = nan(3, length(circle_list), subLen, length(expList)); % 3: betas from memory and prediction system and their interactions
 % paramsName_Prob = {'trialCnt', 'probTrans', 'probAss', 'probTrans:probAss'}; 
 % paramsName_EVs  = {'trialCnt', 'EVtrans', 'EVass', 'EVtrans:EVass'}; 
@@ -605,18 +605,18 @@ for iExp = 1 : length(expList)
     for ii = 1 : 3
         shadedErrorBar(circle_list, acc_avg(ii, :), acc_sem(ii, :), {'Color', colorExp(ii, :), 'MarkerFaceColor', colorExp(ii, :), 'LineStyle', LineSty, 'LineWidth', 3}, 0.5); hold on;
     end
-    % ylim([0, 1]);
+    ylim([-0.2, 0.8]);
     plot(xlim, [0, 0], 'k--', 'LineWidth', 0.8); hold on;
     plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
     axis xy;
     set(gca, 'LineWidth', 0.8);
     set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
     set(gca, 'XTick', 0 : 0.4 : 1.5, 'XTickLabel', '');
-    % set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
+    set(gca, 'YTick', -0.2 : 0.2 : 0.8, 'YTickLabel', '');
     box off;
     ax = gca;
-    save_name = 'BetaCuves.png';
-    % exportgraphics(ax, save_name, 'Resolution', 600);
+    save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-BetaCuves.png'];
+    exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 

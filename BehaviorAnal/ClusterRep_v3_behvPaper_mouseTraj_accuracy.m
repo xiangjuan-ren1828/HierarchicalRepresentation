@@ -717,7 +717,7 @@ set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
 box off;
 ax = gca;
 save_name = 'LearningCuves.png';
-exportgraphics(ax, save_name, 'Resolution', 600);
+% exportgraphics(ax, save_name, 'Resolution', 600);
 
 
 %% SI figure: choice accuracy trajectory for within- and between-transitions 
@@ -1035,7 +1035,7 @@ end
 
 %% BehaviorPaper Figure xx: accuracy for the within- and between-transitions in Random and Hamiltonian Walk trials separately
 % ------ which data set ------
-dataFlg = 2;
+dataFlg = 1;
 if dataFlg == 1     % all trials
     acc_trans_walk_plot = acc_trans_walk;
 elseif dataFlg == 2 % first 700 trials

@@ -525,7 +525,7 @@ for iExp = 1 : length(expList)
     box off;
     ax = gca;
     save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-learning-dtr.png'];
-    exportgraphics(ax, save_name, 'Resolution', 600);
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% BehavioralPaper, Figure xx: overall RTs for within vs. between transitions in Random and Hamiltonian Walk
@@ -606,7 +606,7 @@ for iExp = 1 : length(expList)
     box off;
     ax = gca;
     save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-oneHot-trans-walk.png'];
-%     exportgraphics(ax, save_name, 'Resolution', 600);
+    exportgraphics(ax, save_name, 'Resolution', 600);
 
 end
 

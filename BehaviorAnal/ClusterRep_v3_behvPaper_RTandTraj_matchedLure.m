@@ -5,7 +5,8 @@
 % between the cue to the lure stimulus or to the non-lure stimulus
 % 2) For the error trials with both lure and another 2-step control
 % stimulus as the distractor, whether participants have a larger
-% probability to choose the lure over the control
+% probability to choose the lure over the control: only keep trials with
+% one lure stimulus and one 2-step control stimulus
 % =========================================================================
 % ClusterRep_v3_RTAnal_lureDtr
 % write by rxj @ 10/25/2021
@@ -205,6 +206,7 @@ ang_transOut_subj      = nan(bndNode_Num, 2, subLen, length(expList));
 % and lure + 2-step control stimulus, if participants have a larger
 % probability to select the lure >> control >> others ----------
 % 3: frequency (not proportion) for each condition
+% Excluding the condition with more than one 2-step control stimuli
 lureEffect_errTrial_transIn_subj  = zeros(bndNode_Num, 3, subLen, length(expList));
 lureEffect_errTrial_transOut_subj = zeros(bndNode_Num, 3, subLen, length(expList));
 
@@ -493,7 +495,7 @@ for iExp = 1 : length(expList)
                                      [size(lure_stim_mat,1), 1], ...
                                      @(x){x}, {[]});
 
-            control_stim_yes = any(control_stim_mat, 2); % control_stim_yes = arrayfun(@(x) any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
+            control_stim_yes = sum(control_stim_mat, 2) == 1; % only include trials with one 2-step control; control_stim_yes = any(control_stim_mat, 2); 
             lure_stim_yes    = any(lure_stim_mat, 2);
             error_choice_yes = choiceId_ang == 0;
             from_node_yes    = any(ismember(from_nodes, unique(transIn_InDtr(:, 1))), 2);
@@ -669,7 +671,7 @@ for iExp = 1 : length(expList)
                                      [size(lure_stim_mat,1), 1], ...
                                      @(x){x}, {[]});
 
-            control_stim_yes = any(control_stim_mat, 2); % control_stim_yes = arrayfun(@(x) any(ismember(dt_nodes(x, :), exclude_InDtr)), (1 : length(dt_nodes))');
+            control_stim_yes = sum(control_stim_mat, 2) == 1; % only include trials with one 2-step control; control_stim_yes = any(control_stim_mat, 2); 
             lure_stim_yes    = any(lure_stim_mat, 2);
             error_choice_yes = choiceId_ang == 0;
             from_node_yes    = any(ismember(from_nodes, unique(transOut_InDtr(:, 1))), 2);
@@ -932,7 +934,7 @@ for iExp = 1 : 3
 
     elseif dataFlg == 2 % choice accuracy
         ylim([0, 1]);
-        %ylim([0.05, 0.8]);
+        ylim([0, 1]);
         plot(xlim, [chance_i, chance_i], 'k--', 'LineWidth', 0.8); hold on;
         if figKey == 0
             % ------For presentation------
@@ -945,14 +947,14 @@ for iExp = 1 : 3
             set(gca, 'LineWidth', 0.8);
             set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
             set(gca, 'XTick', [1, 1.5, 1.7, 2.2], 'XTickLabel', '');
-            set(gca, 'YTick', [0.05, 0.2 : 0.2 : 0.8], 'YTickLabel', '');
+            set(gca, 'YTick', 0 : 0.5 : 1, 'YTickLabel', '');
         end
     end
    
     box off;
     ax = gca;
     save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-oneHot-lure.png'];
-%     exportgraphics(ax, save_name, 'Resolution', 600);
+    %exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% BehavioralPaper, Figure xx: Lure effect when both lure and 2-step control stimulus existed in the incorrect response trials
@@ -965,6 +967,14 @@ lureEffect_errTrial_transOut_all = squeeze(sum(lureEffect_errTrial_transOut_subj
 % ------ Convert to proportions ------
 FA_lure_transIn  = lureEffect_errTrial_transIn_all ./ repmat(sum(lureEffect_errTrial_transIn_all, 1), [3, 1, 1]);
 FA_lure_transOut = lureEffect_errTrial_transOut_all ./ repmat(sum(lureEffect_errTrial_transOut_all, 1), [3, 1, 1]);
+% ------ Print avereged total trials across participants ------
+[InNumAvg, InNumSem]   = Mean_and_Se(lureEffect_errTrial_transIn_all, 2);
+InNumAvg = squeeze(InNumAvg)
+InNumSem = squeeze(InNumSem)
+
+[OutNumAvg, OutNumSem] = Mean_and_Se(lureEffect_errTrial_transOut_all, 2);
+OutNumAvg = squeeze(OutNumAvg)
+OutNumSem = squeeze(OutNumSem)
 
 figKey = 1;  % 0: figure for presentation; 1: figure for AI.
 if figKey == 0
@@ -1019,10 +1029,9 @@ for iExp = 1 : 3
     box off;
     ax = gca;
     save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-FA-lure.png'];
-    exportgraphics(ax, save_name, 'Resolution', 600);
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 
 end
-
 
 
 %% BehavioralPaper, Figure xx: influence of lure stimulus on choice accuracy trajectory
