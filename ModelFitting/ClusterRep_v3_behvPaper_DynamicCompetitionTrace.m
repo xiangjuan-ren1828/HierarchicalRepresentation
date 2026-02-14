@@ -80,7 +80,8 @@ trialWord = 'all';         % {'all', 'Hamiltonian'}
 states = 15;
 nFit   = 100;
 expList   = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'};
-MList     = {'SRheurProcessTraceTruncAttMod'}; % 'SRheurProcessProb', 'SRheurProcessTraceWin', 'SRheurProcessTrace', 'SRheurProcessTraceTrunc'
+% MList     = {'SRheurProcessTraceTrunc', 'SRheurProcessTraceInitWfixed0_zero', 'SRheurProcessTraceInitWfixed0_half', 'SRheurProcessTraceInitWfree0', 'SRheurProcessTraceInitWfree'};
+MList     = {'SRheurProcessTraceInitWfree'}; % 'SRheurProcessTraceTruncAttMod': the best model
 priorList = {'nullPrior'}; % 'nullPrior', 'nullPrior', 'nullPrior'
 folder    = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 refit     = 0;
@@ -363,24 +364,35 @@ for iExp = 1 : length(expList)
                 [lliEst, paramsEst, lli_all] = ClusterRep_FitModels_choice(ExpWord, subID, stim, resp, states, choiceId, delta_t_trials, assDist_mat, fitWord, ...
                                                expMode_i, posXY, respYes_trials_blc, mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, nFit, Midx, folder, refit, transMat_input, nij_input, iteWord, trialWord, priorWord);
                 
-                if isequal(Midx, 'SRheurProcessProb')
-                    [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessProb_choice_gdChoice(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
-                                                            mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
-                elseif isequal(Midx, 'SRheurProcessTraceWin')
-                    [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTraceWin_choice_gdChoice(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
-                                                            mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
-                elseif isequal(Midx, 'SRheurProcessTrace')
-                    [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_gdChoice(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
-                                                            mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
-                elseif isequal(Midx, 'SRheurProcessTraceTrunc')
+                if isequal(Midx, 'SRheurProcessTraceTrunc')
                     [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_gdChoice_trunc(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
                                                             mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);  
+
+                elseif isequal(Midx, 'SRheurProcessTraceInitWfixed0_zero')
+                    [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_iniWeightfree0_zero(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
+                                                            mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
+
+                elseif isequal(Midx, 'SRheurProcessTraceInitWfixed0_half')
+                    [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_iniWeightfree0_half(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
+                                                            mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
+
+                elseif isequal(Midx, 'SRheurProcessTraceInitWfree0')
+                    [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_iniWeightfree0(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
+                                                            mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
+
                 elseif isequal(Midx, 'SRheurProcessTraceTruncAtt')
                     [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_gdChoice_truncAtt(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
                                                             mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
+
                 elseif isequal(Midx, 'SRheurProcessTraceTruncAttMod')
                     [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_gdChoice_truncAttMod(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
                                                             mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
+
+                elseif isequal(Midx, 'SRheurProcessTraceInitWfree')
+                    [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_iniWeightfree(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
+                                                            mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
+
+                
                 end
 
                 M_trans_subj(:, :, iSub, iM) = M_trans;
@@ -603,7 +615,7 @@ for iExp = 1 : length(expList)
     box off;
     ax = gca;
     save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-lambda-bins.png'];
-    exportgraphics(ax, save_name, 'Resolution', 600);
+    %exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 %% Behavioral paper, Supplementary Figure xx: weights trace across trials (all 1500 trials)
@@ -646,7 +658,7 @@ for iExp = 1 : 3
     box off;
     ax = gca;
     save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-lambda-trials.png'];
-    exportgraphics(ax, save_name, 'Resolution', 600);
+    %exportgraphics(ax, save_name, 'Resolution', 600);
 
 end
 

@@ -81,7 +81,7 @@ trialWord = 'all';         % {'all', 'Hamiltonian'}
 states = 15;
 nFit   = 100;
 expList   = {'ImplicitExp', 'ExplicitExp', 'ImplicitRandExp'};
-MList     = {'SRheurProcessTraceTruncAttMod'}; 
+MList     = {'SRheurProcessTraceTruncAttmod'}; 
 priorList = {'nullPrior'}; 
 folder    = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster';
 refit     = 0;
@@ -91,9 +91,11 @@ nSim = 500;
 
 %%
 circle_list = 0 : 1/60 : 1.5;
-colName_bc  = {'Choice', 'trialCnt', 'probTrans', 'probAss', 'EVtrans', 'EVass'}; % binary choice
-paramsName_Prob = {'trialCnt', 'probTrans', 'probAss', 'probTrans:probAss'}; 
-paramsName_EVs  = {'trialCnt', 'EVtrans', 'EVass', 'EVtrans:EVass'}; 
+colName_bc  = {'Choice', 'trialCnt', 'probTrans', 'probAss', 'EVtrans', 'EVass', 'dtrNo'}; % binary choice
+% paramsName_Prob = {'trialCnt', 'probTrans', 'probAss', 'probTrans:probAss'}; 
+% paramsName_EVs  = {'trialCnt', 'EVtrans', 'EVass', 'EVtrans:EVass'}; 
+paramsName_Prob = {'trialCnt', 'probTrans', 'probAss', 'dtrNo'}; 
+paramsName_EVs  = {'trialCnt', 'EVtrans', 'EVass', 'dtrNo'}; 
 nParams_Prob    = length(paramsName_Prob); % exclude intercept parameter
 nParams_EVs     = length(paramsName_EVs);
 subLen = 24;
@@ -101,6 +103,10 @@ subLen = 24;
 betas_times_nExp            = cell(subLen, length(expList));
 betas_times_firstHalf_nExp  = cell(subLen, length(expList));
 betas_times_secondHalf_nExp = cell(subLen, length(expList));
+% ------ Also check data points for each time point ------
+dataN_times_nExp = nan(subLen, length(circle_list), length(expList), 3); % 3: all trials vs. first 700 vs. last 800 trials
+nBlock = 7; % 7 real blocks
+dataN_times_nBlc = nan(subLen, length(circle_list), length(expList), nBlock);
 for iExp = 1 : length(expList)
     ExpWord = expList{iExp};
     %% Subject
@@ -371,7 +377,7 @@ for iExp = 1 : length(expList)
             elseif isequal(Midx, 'SRheurProcessTraceTruncAtt')
                 [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials] = SR_heurProcessTrace_choice_gdChoice_truncAtt(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
                                                         mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
-            elseif isequal(Midx, 'SRheurProcessTraceTruncAttMod')
+            elseif isequal(Midx, 'SRheurProcessTraceTruncAttmod')
                 [~, M_trans, M_ass, p_choice_all, choiceID_all, lambda_trials, p_choice_trs, p_choice_ass, lr_trials, EV_trs, EV_ass] = ...
                     SR_heurProcessTrace_choice_gdChoice_truncAttMod(paramsEst, stim, resp, states, choiceId, delta_t_trials, assDist_mat, expMode_i, posXY, respYes_trials_blc, ...
                                                         mouseTraj_trials_blc, objAng_col, objDtrNo_col, miniDmat, fitWord, transMat_input, nij_input, priorWord);
@@ -384,7 +390,7 @@ for iExp = 1 : length(expList)
             % 2) EV as the regressor, though the scale predicted from the
             % two system might be different
             %regressor_trial = [log(trials_Col), p_choice_trs(:, 1), p_choice_ass(:, 1), zscore(EV_trs(:, 1)), zscore(EV_ass(:, 1))]; 
-            regressor_trial_raw = [log(trials_Col), p_choice_trs(:, 1), p_choice_ass(:, 1), EV_trs(:, 1), EV_ass(:, 1)]; 
+            regressor_trial_raw = [log(trials_Col), p_choice_trs(:, 1), p_choice_ass(:, 1), EV_trs(:, 1), EV_ass(:, 1), objDtrNo_col]; 
             regressor_trial     = regressor_trial_raw;
             regressor_trial(:, 2 : end) = zscore(regressor_trial(:, 2 : end));
 
@@ -394,13 +400,15 @@ for iExp = 1 : length(expList)
                 % ------ Constructing the GLM array ------
                 logit_trial = [choiceId_i, regressor_trial];
                 logit_trial(isnan(logit_trial(:, 1)), :) = [];
+                dataN_times_nExp(iSub, iTime, iExp, 1)   = sum(~isnan(choiceId_i));
                 
                 if size(logit_trial, 1) > (3 * nParams_Prob)
                     %%% convert matrix into table
                     lm_tbl = array2table(logit_trial, 'VariableNames', colName_bc);
 
                     %%% ---------- 1. Regression with predicted probability as the regressors ----------
-                    modelspec = 'Choice ~ trialCnt + probTrans + probAss + probTrans*probAss';
+                    % modelspec = 'Choice ~ trialCnt + probTrans + probAss + probTrans*probAss';
+                    modelspec = 'Choice ~ trialCnt + probTrans + probAss + dtrNo';
                     opts = statset('glmfit');
                     opts.MaxIter = nParams_Prob*1000;
                     fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
@@ -416,7 +424,8 @@ for iExp = 1 : length(expList)
                     betas_iTime(:, iTime, 1) = betas_Prob;
 
                     %%% ---------- 2. Regression with Expected Values as the regressors ----------
-                    modelspec = 'Choice ~ trialCnt + EVtrans + EVass + EVtrans*EVass';
+                    %modelspec = 'Choice ~ trialCnt + EVtrans + EVass + EVtrans*EVass';
+                    modelspec = 'Choice ~ trialCnt + EVtrans + EVass + dtrNo';
                     opts = statset('glmfit');
                     opts.MaxIter = nParams_EVs*1000;
                     fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
@@ -436,113 +445,131 @@ for iExp = 1 : length(expList)
             betas_times_nExp{iSub, iExp} = betas_iTime;
 
             %% ------ First 700 trials (only random walks) ------
-            trainTrl_idx = find(trials_Col <= 700);
-            regressor_train_trial = regressor_trial_raw(trainTrl_idx, :);
-            regressor_train_trial(:, 2 : end) = zscore(regressor_train_trial(:, 2 : end));
-
-            betas_iTime_train = nan(nParams_Prob, length(circle_list), 2); % 2: probability and EVs as regressors
-            for iTime = 1 : length(circle_list)
-                choiceId_i  = choiceId_time(:, iTime);
-                choiceId_i  = choiceId_i(trainTrl_idx);
-                % ------ Constructing the GLM array ------
-                logit_trial = [choiceId_i, regressor_train_trial];
-                logit_trial(isnan(logit_trial(:, 1)), :) = [];
-                
-                if size(logit_trial, 1) > (3 * nParams_Prob)
-                    %%% convert matrix into table
-                    lm_tbl = array2table(logit_trial, 'VariableNames', colName_bc);
-
-                    %%% ---------- 1. Regression with predicted probability as the regressors ----------
-                    modelspec = 'Choice ~ trialCnt + probTrans + probAss + probTrans*probAss';
-                    opts = statset('glmfit');
-                    opts.MaxIter = nParams_Prob*1000;
-                    fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
-                    fitNames = fit.CoefficientNames;
-                    betas_Prob = nan(nParams_Prob, 1);
-                    for iPs = 1 : nParams_Prob
-                        params_iPs = paramsName_Prob{iPs};
-                        if any(strcmp(fitNames, params_iPs))
-                            betas_Prob(iPs) = fit.Coefficients{params_iPs, 1}; % 1 is the column of the Estimate
-                            % betas = fit.Coefficients.Estimate;
-                        end
-                    end
-                    betas_iTime_train(:, iTime, 1) = betas_Prob;
-
-                    %%% ---------- 2. Regression with Expected Values as the regressors ----------
-                    modelspec = 'Choice ~ trialCnt + EVtrans + EVass + EVtrans*EVass';
-                    opts = statset('glmfit');
-                    opts.MaxIter = nParams_EVs*1000;
-                    fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
-                    fitNames = fit.CoefficientNames;
-                    betas_EVs = nan(nParams_EVs, 1);
-                    for iPs = 1 : nParams_EVs
-                        params_iPs = paramsName_EVs{iPs};
-                        if any(strcmp(fitNames, params_iPs))
-                            betas_EVs(iPs) = fit.Coefficients{params_iPs, 1}; % 1 is the column of the Estimate
-                            % betas = fit.Coefficients.Estimate;
-                        end
-                    end
-                    betas_iTime_train(:, iTime, 2) = betas_EVs;
-
-                end
-            end
-            betas_times_firstHalf_nExp{iSub, iExp} = betas_iTime_train;
+%             trainTrl_idx = find(trials_Col <= 700);
+%             regressor_train_trial = regressor_trial_raw(trainTrl_idx, :);
+%             regressor_train_trial(:, 2 : end) = zscore(regressor_train_trial(:, 2 : end));
+% 
+%             betas_iTime_train = nan(nParams_Prob, length(circle_list), 2); % 2: probability and EVs as regressors
+%             for iTime = 1 : length(circle_list)
+%                 choiceId_i  = choiceId_time(:, iTime);
+%                 choiceId_i  = choiceId_i(trainTrl_idx);
+%                 % ------ Constructing the GLM array ------
+%                 logit_trial = [choiceId_i, regressor_train_trial];
+%                 logit_trial(isnan(logit_trial(:, 1)), :) = [];
+%                 dataN_times_nExp(iSub, iTime, iExp, 2)   = sum(~isnan(choiceId_i));
+%                 
+%                 if size(logit_trial, 1) > (3 * nParams_Prob)
+%                     %%% convert matrix into table
+%                     lm_tbl = array2table(logit_trial, 'VariableNames', colName_bc);
+% 
+%                     %%% ---------- 1. Regression with predicted probability as the regressors ----------
+%                     % modelspec = 'Choice ~ trialCnt + probTrans + probAss + probTrans*probAss';
+%                     modelspec = 'Choice ~ trialCnt + probTrans + probAss';
+%                     opts = statset('glmfit');
+%                     opts.MaxIter = nParams_Prob*1000;
+%                     fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
+%                     fitNames = fit.CoefficientNames;
+%                     betas_Prob = nan(nParams_Prob, 1);
+%                     for iPs = 1 : nParams_Prob
+%                         params_iPs = paramsName_Prob{iPs};
+%                         if any(strcmp(fitNames, params_iPs))
+%                             betas_Prob(iPs) = fit.Coefficients{params_iPs, 1}; % 1 is the column of the Estimate
+%                             % betas = fit.Coefficients.Estimate;
+%                         end
+%                     end
+%                     betas_iTime_train(:, iTime, 1) = betas_Prob;
+% 
+%                     %%% ---------- 2. Regression with Expected Values as the regressors ----------
+%                     % modelspec = 'Choice ~ trialCnt + EVtrans + EVass + EVtrans*EVass';
+%                     modelspec = 'Choice ~ trialCnt + EVtrans + EVass';
+%                     opts = statset('glmfit');
+%                     opts.MaxIter = nParams_EVs*1000;
+%                     fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
+%                     fitNames = fit.CoefficientNames;
+%                     betas_EVs = nan(nParams_EVs, 1);
+%                     for iPs = 1 : nParams_EVs
+%                         params_iPs = paramsName_EVs{iPs};
+%                         if any(strcmp(fitNames, params_iPs))
+%                             betas_EVs(iPs) = fit.Coefficients{params_iPs, 1}; % 1 is the column of the Estimate
+%                             % betas = fit.Coefficients.Estimate;
+%                         end
+%                     end
+%                     betas_iTime_train(:, iTime, 2) = betas_EVs;
+% 
+%                 end
+%             end
+%             betas_times_firstHalf_nExp{iSub, iExp} = betas_iTime_train;
 
 
             %% ------ Second 800 trials (mixture of random and hamiltonian walks) ------
-            testTrl_idx = find(trials_Col > 700);
-            regressor_test_trial = regressor_trial_raw(testTrl_idx, :);
-            regressor_test_trial(:, 2 : end) = zscore(regressor_test_trial(:, 2 : end));
-
-            betas_iTime_test = nan(nParams_Prob, length(circle_list), 2); % 2: probability and EVs as regressors
-            for iTime = 1 : length(circle_list)
-                choiceId_i  = choiceId_time(:, iTime);
-                choiceId_i  = choiceId_i(testTrl_idx);
-                % ------ Constructing the GLM array ------
-                logit_trial = [choiceId_i, regressor_test_trial];
-                logit_trial(isnan(logit_trial(:, 1)), :) = [];
-                
-                if size(logit_trial, 1) > (3 * nParams_Prob)
-                    %%% convert matrix into table
-                    lm_tbl = array2table(logit_trial, 'VariableNames', colName_bc);
-
-                    %%% ---------- 1. Regression with predicted probability as the regressors ----------
-                    modelspec = 'Choice ~ trialCnt + probTrans + probAss + probTrans*probAss';
-                    opts = statset('glmfit');
-                    opts.MaxIter = nParams_Prob*1000;
-                    fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
-                    fitNames = fit.CoefficientNames;
-                    betas_Prob = nan(nParams_Prob, 1);
-                    for iPs = 1 : nParams_Prob
-                        params_iPs = paramsName_Prob{iPs};
-                        if any(strcmp(fitNames, params_iPs))
-                            betas_Prob(iPs) = fit.Coefficients{params_iPs, 1}; % 1 is the column of the Estimate
-                            % betas = fit.Coefficients.Estimate;
-                        end
-                    end
-                    betas_iTime_test(:, iTime, 1) = betas_Prob;
-
-                    %%% ---------- 2. Regression with Expected Values as the regressors ----------
-                    modelspec = 'Choice ~ trialCnt + EVtrans + EVass + EVtrans*EVass';
-                    opts = statset('glmfit');
-                    opts.MaxIter = nParams_EVs*1000;
-                    fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
-                    fitNames = fit.CoefficientNames;
-                    betas_EVs = nan(nParams_EVs, 1);
-                    for iPs = 1 : nParams_EVs
-                        params_iPs = paramsName_EVs{iPs};
-                        if any(strcmp(fitNames, params_iPs))
-                            betas_EVs(iPs) = fit.Coefficients{params_iPs, 1}; % 1 is the column of the Estimate
-                            % betas = fit.Coefficients.Estimate;
-                        end
-                    end
-                    betas_iTime_test(:, iTime, 2) = betas_EVs;
-
+%             testTrl_idx = find(trials_Col > 700);
+%             regressor_test_trial = regressor_trial_raw(testTrl_idx, :);
+%             regressor_test_trial(:, 2 : end) = zscore(regressor_test_trial(:, 2 : end));
+% 
+%             betas_iTime_test = nan(nParams_Prob, length(circle_list), 2); % 2: probability and EVs as regressors
+%             for iTime = 1 : length(circle_list)
+%                 choiceId_i  = choiceId_time(:, iTime);
+%                 choiceId_i  = choiceId_i(testTrl_idx);
+%                 % ------ Constructing the GLM array ------
+%                 logit_trial = [choiceId_i, regressor_test_trial];
+%                 logit_trial(isnan(logit_trial(:, 1)), :) = [];
+%                 dataN_times_nExp(iSub, iTime, iExp, 3)   = sum(~isnan(choiceId_i));
+%                 
+%                 if size(logit_trial, 1) > (3 * nParams_Prob)
+%                     %%% convert matrix into table
+%                     lm_tbl = array2table(logit_trial, 'VariableNames', colName_bc);
+% 
+%                     %%% ---------- 1. Regression with predicted probability as the regressors ----------
+%                     % modelspec = 'Choice ~ trialCnt + probTrans + probAss + probTrans*probAss';
+%                     modelspec = 'Choice ~ trialCnt + probTrans + probAss';
+%                     opts = statset('glmfit');
+%                     opts.MaxIter = nParams_Prob*1000;
+%                     fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
+%                     fitNames = fit.CoefficientNames;
+%                     betas_Prob = nan(nParams_Prob, 1);
+%                     for iPs = 1 : nParams_Prob
+%                         params_iPs = paramsName_Prob{iPs};
+%                         if any(strcmp(fitNames, params_iPs))
+%                             betas_Prob(iPs) = fit.Coefficients{params_iPs, 1}; % 1 is the column of the Estimate
+%                             % betas = fit.Coefficients.Estimate;
+%                         end
+%                     end
+%                     betas_iTime_test(:, iTime, 1) = betas_Prob;
+% 
+%                     %%% ---------- 2. Regression with Expected Values as the regressors ----------
+%                     % modelspec = 'Choice ~ trialCnt + EVtrans + EVass + EVtrans*EVass';
+%                     modelspec = 'Choice ~ trialCnt + EVtrans + EVass';
+%                     opts = statset('glmfit');
+%                     opts.MaxIter = nParams_EVs*1000;
+%                     fit = fitglm(lm_tbl, modelspec, 'Distribution', 'binomial', 'link', 'logit', 'options', opts); % 
+%                     fitNames = fit.CoefficientNames;
+%                     betas_EVs = nan(nParams_EVs, 1);
+%                     for iPs = 1 : nParams_EVs
+%                         params_iPs = paramsName_EVs{iPs};
+%                         if any(strcmp(fitNames, params_iPs))
+%                             betas_EVs(iPs) = fit.Coefficients{params_iPs, 1}; % 1 is the column of the Estimate
+%                             % betas = fit.Coefficients.Estimate;
+%                         end
+%                     end
+%                     betas_iTime_test(:, iTime, 2) = betas_EVs;
+% 
+%                 end
+%             end
+%             betas_times_secondHalf_nExp{iSub, iExp} = betas_iTime_test;
+            
+            %% ---------- Check the data points at each time within each block ----------
+            % dataN_times_nBlc = nan(subLen, length(circle_list), length(expList), nBlock);
+            for iBlc = 1 : nBlock
+                trl_iBlc   = trialsInBlc(iBlc, :);
+                for iTime = 1 : length(circle_list)
+                    choiceId_i = choiceId_time((trials_Col >= trl_iBlc(1) & trials_Col <= trl_iBlc(2)), iTime);
+                    dataN_times_nBlc(iSub, iTime, iExp, iBlc) = sum(~isnan(choiceId_i));
                 end
             end
-            betas_times_secondHalf_nExp{iSub, iExp} = betas_iTime_test;
-            
-            %%
+
+            %% ---------- Fit the weight parameter per block ----------
+
+
             
         elseif isequal(expMode_i, 'key')
             % ......
@@ -551,12 +578,66 @@ for iExp = 1 : length(expList)
     end
 end
 
+%% save the relevant data for subsequent analysis
+% added by XR @ Feb 13 2026
+dataSave_folder = '/Users/ren/Projects-NeuroCode/MyExperiment/HierarchicalCluster/HierarchicalRepresentation/PreprocessedData/';
+% save([dataSave_folder, 'betas_regress_times.mat'], 'betas_times_nExp', 'betas_times_firstHalf_nExp', 'betas_times_secondHalf_nExp');
+% save([dataSave_folder, 'dataN_times.mat'], 'dataN_times_nExp', 'dataN_times_nBlc');
+
+
+%% plot the data number distribution for each time point
+% added by XR @ Feb 13 2026
+% dataN_times_nExp = nan(subLen, length(circle_list), length(expList), 3); % 3: all trials vs. first 700 vs. last 800 trials
+% dataN_times_nBlc = nan(subLen, length(circle_list), length(expList), nBlock);
+%% ------ All trials together ------
+for iExp = 1 : length(expList)
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    figure('Position', [100 100 300 140]), clf;
+    dataN_times_iExp = dataN_times_nExp(:, :, iExp, 1);
+    [Navg, Nsem] = Mean_and_Se(dataN_times_iExp, 1);
+    for iSub = 1 : size(dataN_times_iExp, 1)
+        plot(circle_list, dataN_times_iExp(iSub, :), 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', 0.8); hold on;
+    end
+    shadedErrorBar(circle_list, Navg, Nsem, {'Color', 'r', 'MarkerFaceColor', 'r', 'LineStyle', '-', 'LineWidth', 3}, 0.5); hold on;
+    
+    plot(xlim, [0, 0], 'k--', 'LineWidth', 0.8); hold on;
+    plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
+    axis xy;
+    set(gca, 'LineWidth', 0.8);
+    set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+    set(gca, 'XTick', 0 : 0.4 : 1.5, 'XTickLabel', '');
+    box off;
+end
+
+%% ------ Block 1-7 ------
+for iExp = 3% : length(expList)
+    disp(['---------- ', expList{iExp}, ' ----------']);
+    for iBlc = 1 : nBlock
+        figure('Position', [100 100 300 140]), clf;
+        dataN_times_iExp = dataN_times_nBlc(:, :, iExp, iBlc);
+        [Navg, Nsem] = Mean_and_Se(dataN_times_iExp, 1);
+        for iSub = 1 : size(dataN_times_iExp, 1)
+            plot(circle_list, dataN_times_iExp(iSub, :), 'Color', [0.6, 0.6, 0.6], 'LineStyle', '-', 'LineWidth', 0.8); hold on;
+        end
+        shadedErrorBar(circle_list, Navg, Nsem, {'Color', 'r', 'MarkerFaceColor', 'r', 'LineStyle', '-', 'LineWidth', 3}, 0.5); hold on;
+
+        plot(xlim, [0, 0], 'k--', 'LineWidth', 0.8); hold on;
+        plot([0.8, 0.8], ylim, 'k--', 'LineWidth', 1); hold on;
+        axis xy;
+        set(gca, 'LineWidth', 0.8);
+        set(gca, 'FontSize', 10, 'FontWeight', 'bold', 'FontName', 'Arial');
+        set(gca, 'XTick', 0 : 0.4 : 1.5, 'XTickLabel', '');
+        box off;
+
+    end
+end
+
 %% Extracting the relevant betas
 % betas_times_nExp            = cell(subLen, length(expList));
 % betas_times_firstHalf_nExp  = cell(subLen, length(expList));
 % betas_times_secondHalf_nExp = cell(subLen, length(expList));
 
-trialFlg = 3; % 1-all trials; 2-first 700 trials; 3-last 800 trials;
+trialFlg = 1; % 1-all trials; 2-first 700 trials; 3-last 800 trials;
 if trialFlg == 1
     betas_times_tmp = betas_times_nExp;
 elseif trialFlg == 2
@@ -565,8 +646,8 @@ elseif trialFlg == 3
     betas_times_tmp = betas_times_secondHalf_nExp;
 end
 
-dataFlg  = 2; % 1-predicted choice probability as the regressor; 2-EVs
-betas_times_plot = nan(3, length(circle_list), subLen, length(expList)); % 3: betas from memory and prediction system and their interactions
+dataFlg  = 1; % 1-predicted choice probability as the regressor; 2-EVs
+betas_times_plot = nan(3, length(circle_list), subLen, length(expList)); % 3: betas from memory and prediction system and distractor number
 % paramsName_Prob = {'trialCnt', 'probTrans', 'probAss', 'probTrans:probAss'}; 
 % paramsName_EVs  = {'trialCnt', 'EVtrans', 'EVass', 'EVtrans:EVass'}; 
 for iExp = 1 : length(expList)
@@ -602,7 +683,7 @@ for iExp = 1 : length(expList)
     betas_times_ii = betas_times_plot(:, :, :, iExp);
     [acc_avg, acc_sem] = Mean_and_Se(betas_times_ii, 3); % (3, length(circle_list))
 
-    for ii = 1 : 3
+    for ii = 1 : 2
         shadedErrorBar(circle_list, acc_avg(ii, :), acc_sem(ii, :), {'Color', colorExp(ii, :), 'MarkerFaceColor', colorExp(ii, :), 'LineStyle', LineSty, 'LineWidth', 3}, 0.5); hold on;
     end
     ylim([-0.2, 0.8]);
@@ -616,7 +697,7 @@ for iExp = 1 : length(expList)
     box off;
     ax = gca;
     save_name = ['Exp', num2str(iExp), '-', expList{iExp}, '-BetaCuves.png'];
-    exportgraphics(ax, save_name, 'Resolution', 600);
+%     exportgraphics(ax, save_name, 'Resolution', 600);
 end
 
 
